@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Claudia-chan</title>
+<style>
+  :root { --ink: #33263a; --soft: #8b7a92; --line: #f0dbe6; --bg: #fff7fb; --pink: #ff5fa2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 22px 24px 30px; background: var(--bg); color: var(--ink); font: 15px system-ui, sans-serif; }
+  h1 { margin: 0 0 18px; font-size: 22px; }
+  h2 { margin: 20px 0 8px; font-size: 13px; color: var(--soft); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  button { padding: 7px 13px; border: 2px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink); font: 600 14px system-ui, sans-serif; cursor: pointer; }
+  button.on { border-color: var(--pink); color: var(--pink); }
+  button.swatch { width: 36px; height: 36px; padding: 0; }
+  button.swatch.on { outline: 3px solid var(--pink); outline-offset: 1px; border-color: #fff; }
+  input { padding: 8px 12px; border: 2px solid var(--line); border-radius: 10px; font: 15px system-ui, sans-serif; color: var(--ink); }
+</style>
+</head>
+<body>
+<h1>Personalizar a Claudia-chan</h1>
+<div id="root"></div>
+<script>
+// Skin stays light by the owner's decision: never add dark tones here.
+const COLORS = {
+  piel: [['natural', null], ['nieve', '#fff4ef'], ['rosada', '#ffe3e0'], ['clara', '#f9e6d6'], ['durazno', '#f6dcc4']],
+  pelo: [['natural', null], ['negro', '#2a2630'], ['rubio', '#f2d27a'], ['rosa', '#ff8fc0'], ['rojo', '#c8343c'], ['azul', '#4f8ff0'], ['morado', '#9a62e0'], ['plata', '#d8dde8']],
+  ojos: [['natural', null], ['miel', '#c98a2e'], ['verde', '#3fae6b'], ['azul', '#3f8fe0'], ['violeta', '#9a55e0'], ['rojo', '#e03040']],
+  ropa: [['natural', null], ['negra', '#30303a'], ['rosa', '#ff9cc8'], ['celeste', '#8fd0f5'], ['roja', '#d04048'], ['verde', '#5fb080']],
+}
+const CHOICES = {
+  personalidad: ['yandere', 'tsundere', 'dulce', 'kuudere', 'onee-san'],
+  voz: ['espanol', 'japones'],
+  tono: ['grave', 'normal', 'agudo'],
+  velocidad: ['lenta', 'normal', 'rapida'],
+  tamano: ['chico', 'normal', 'grande'],
+  pasear: ['off', 'on'],
+}
+const DEFAULTS = { personalidad: 'yandere', voz: 'espanol', tono: 'normal', velocidad: 'normal', tamano: 'normal', pasear: 'off', modelo: 'sample' }
+const root = document.getElementById('root')
+const send = body => fetch('/event', { method: 'POST', headers: { 'x-claudia-chan': '1' }, body: JSON.stringify(body) })
+
+function group(title, items, isOn, choose, isSwatch) {
+  const h = Object.assign(document.createElement('h2'), { textContent: title })
+  const row = Object.assign(document.createElement('div'), { className: 'row' })
+  for (const item of items) {
+    const b = document.createElement('button')
+    b.className = (isSwatch && item[1] ? 'swatch ' : '') + (isOn(item) ? 'on' : '')
+    if (isSwatch && item[1]) { b.style.background = item[1]; b.title = item[0] } else b.textContent = isSwatch ? item[0] : item
+    b.onclick = () => {
+      choose(item)
+      row.querySelectorAll('button').forEach(x => x.classList.remove('on'))
+      b.classList.add('on')
+    }
+    row.append(b)
+  }
+  root.append(h, row)
+}
+
+Promise.all([fetch('/config.json').then(r => r.json()).catch(() => ({})), fetch('/models').then(r => r.json())]).then(([config, models]) => {
+  const name = Object.assign(document.createElement('input'), { value: config.name ?? 'Claudia-chan', maxLength: 24 })
+  name.onchange = () => send({ type: 'name', value: name.value.trim() || 'Claudia-chan' })
+  root.append(Object.assign(document.createElement('h2'), { textContent: 'nombre' }), name)
+  for (const [part, list] of Object.entries(COLORS)) {
+    group(part, list, ([, c]) => (config[part] ?? null) === c, ([, c]) => send({ type: 'style', part, color: c }), true)
+  }
+  for (const [key, list] of Object.entries({ ...CHOICES, modelo: models })) {
+    group(key, list, v => (config[key] ?? DEFAULTS[key]) === v, v => send({ type: 'setting', key, value: v }))
+  }
+})
+</script>
+</body>
+</html>

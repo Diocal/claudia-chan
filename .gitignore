@@ -1,0 +1,5 @@
+node_modules/
+vendor/
+config.json
+plugin/.claude-plugin/types/
+*.log
