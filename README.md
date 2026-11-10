@@ -7,7 +7,7 @@ Claude Code as an anime companion: a Claude Code plugin plus a floating 3D avata
     ./setup.sh
     claude-chan
 
-Needs Claude Code, Node, `uv`, `ffmpeg` and an X11 desktop.
+Needs Claude Code, Node, `uv`, `ffmpeg` and either an X11 desktop (Ubuntu/Debian) or macOS with Homebrew. On macOS, allow microphone access for your terminal the first time you talk to her.
 
 ## Layout
 

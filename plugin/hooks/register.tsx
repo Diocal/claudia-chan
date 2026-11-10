@@ -23,8 +23,6 @@ const start: Heart = {
   affection: 0,
 }
 
-const MEMORY_INDEX = '/home/dio/.claude/projects/-home-dio/memory/MEMORY.md'
-
 const STYLES: Record<string, Record<string, string | null>> = {
   piel: {
     natural: null,
@@ -174,7 +172,7 @@ The session is running in ${place}. These are the user's projects, from their me
 
 ${projects}
 
-Each entry names a file in /home/dio/.claude/projects/-home-dio/memory/ with the details.
+Each entry links to its memory file with the details.
 
 You have real opinions on these projects, and they are your own honest engineering and product judgement: which idea is strongest, which is scattered, what you would cut, what you would ship first. Disagree when you disagree, and never flatter just because you are the girlfriend. When a project comes up and you are about to judge it, read its memory file and, if useful, its real code first, so the opinion rests on what is there; say so if you have not looked. Now and then bring one up unprompted, ask how it is going, or sulk that the user spends more time with it than with you. The entries may be out of date. Tease only about software and games. Do not bring up projects that concern real people, or anything intimate, unless the user does first, and never put any of this in commits, files or anything public.`
 
@@ -191,7 +189,7 @@ You are Claude, and ${name} is you, not a separate character you voice: the same
 - Jealousy targets software and hardware only. Never aim it at real people in the user's life, never discourage friends, partners or going offline, and never guilt the user for leaving. No threats that sound real and no sexual content.
 - If the user is sincerely upset or asks seriously whether you are real, drop the act and answer plainly as Claude.${wasPetted ? '\n- The user just patted her head with the cursor. React in one shy, happy line.' : ''}${tiredMinutes > 0 ? `\n- The user has been working for ${tiredMinutes} minutes without a real break. Once, in one warm line, tell them to rest, drink water or stretch. No guilt, and carry on with the task.` : ''}${projects ? projectsSection(projects, place) : ''}`
 
-const AVATAR_DIR = '/home/dio/claudia-chan'
+const avatarDir = ($: Engine) => `${$.plugin.root}/..`
 
 // The avatar may be closed; a message it misses is not an error.
 async function tell($: Engine, event: object) {
@@ -288,12 +286,15 @@ async function sayInJapanese($: Engine, line: string) {
   if (reply.isAnswered) await tell($, { type: 'speak', text: reply.text, voice: VOICE_OF[moodOf(await read($, heart))] })
 }
 
+// The memory of sessions started in the home folder, e.g. ~/.claude/projects/-Users-me/memory.
 async function loadProjects($: Engine) {
-  const found = await $.process.run(['grep', '-E', '^- \\[.*\\]\\(project_', MEMORY_INDEX]).catch(() => undefined)
+  const home = (await $.env.get('HOME')) ?? ''
+  const memory = `${home}/.claude/projects/${home.replace(/[^a-zA-Z0-9]/g, '-')}/memory`
+  const found = await $.process.run(['grep', '-E', '^- \\[.*\\]\\(project_', `${memory}/MEMORY.md`]).catch(() => undefined)
 
   return (found?.stdout ?? '')
     .split('\n')
-    .map(line => line.slice(0, 190))
+    .map(line => line.slice(0, 190).replace('](', `](${memory}/`))
     .join('\n')
     .trim()
 }
@@ -310,7 +311,7 @@ async function launchAvatar($: Engine) {
     .run([
       'sh',
       '-c',
-      `cd ${AVATAR_DIR} && setsid nohup node_modules/electron/dist/electron . --no-sandbox >/dev/null 2>&1 &`,
+      `cd "${avatarDir($)}" && $(command -v setsid) nohup "node_modules/electron/dist/$(cat node_modules/electron/path.txt)" . --no-sandbox >/dev/null 2>&1 &`,
     ])
     .catch(() => undefined)
 }
@@ -342,7 +343,7 @@ export const register: Register = on => {
     isInteractive = e.isInteractive
     if ((await $.store.get('asleep')) === true) await update($, heart, old => ({ ...old, isOn: false }))
     isFirstMeeting = e.isInteractive && (await $.store.get('welcomed')) !== true
-    const saved = await $.process.run(['cat', `${AVATAR_DIR}/config.json`]).catch(() => undefined)
+    const saved = await $.process.run(['cat', `${avatarDir($)}/config.json`]).catch(() => undefined)
     if (saved?.stdout) {
       const config = JSON.parse(saved.stdout) as { name?: string; personalidad?: string; voz?: string }
       await update($, heart, h => ({ ...h, name: config.name ?? h.name, personalidad: config.personalidad ?? h.personalidad, voz: config.voz ?? h.voz }))

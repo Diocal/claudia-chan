@@ -66,7 +66,8 @@ function toggleListen() {
   }
   const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'claudia-mic-'))
   const file = path.join(folder, 'mic.wav')
-  const current = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'pulse', '-i', 'default', '-ac', '1', '-ar', '16000', file], { stdio: 'ignore' })
+  const input = process.platform === 'darwin' ? ['-f', 'avfoundation', '-i', ':default'] : ['-f', 'pulse', '-i', 'default']
+  const current = spawn('ffmpeg', ['-y', '-loglevel', 'error', ...input, '-ac', '1', '-ar', '16000', file], { stdio: 'ignore' })
   recorder = current
   const limit = setTimeout(() => current.kill('SIGINT'), MAX_LISTEN_MS)
   win?.webContents.send('claudia-chan', { type: 'listening', value: true })
@@ -379,6 +380,7 @@ function createWindow() {
 
 app.commandLine.appendSwitch('enable-transparent-visuals')
 app.whenReady().then(() => {
+  app.dock?.hide()
   http.createServer(handle).on('error', () => app.exit(1)).listen(PORT, '127.0.0.1', createWindow)
   console.log('move shortcut registered:', globalShortcut.register(MOVE_KEY, toggleMove))
   console.log('listen shortcut registered:', globalShortcut.register(LISTEN_KEY, toggleListen))
