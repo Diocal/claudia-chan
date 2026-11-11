@@ -27,6 +27,9 @@ const MIME = {
 if (!app.requestSingleInstanceLock()) app.exit(0)
 
 let win = null
+// The avatar window can die (GPU reset, renderer crash); everything that touches it checks first.
+const alive = () => Boolean(win && !win.isDestroyed())
+let quitting = false
 let lastBeat = Date.now()
 const stayOpen = process.env.CLAUDIA_CHAN_STAY === '1'
 const CONFIG = path.join(__dirname, 'config.json')
@@ -90,12 +93,14 @@ function toggleListen() {
 }
 
 function glide(toX, toY, ms) {
+  if (!alive()) return Promise.resolve()
   const [fromX, fromY] = win.getPosition()
   const startedAt = Date.now()
   return new Promise(resolve => {
     const timer = setInterval(() => {
       const raw = Math.min(1, (Date.now() - startedAt) / ms)
       const eased = raw * raw * (3 - 2 * raw)
+      if (!alive()) { clearInterval(timer); resolve(); return }
       win.setPosition(Math.round(fromX + (toX - fromX) * eased), Math.round(fromY + (toY - fromY) * eased))
       if (raw === 1) {
         clearInterval(timer)
@@ -107,7 +112,7 @@ function glide(toX, toY, ms) {
 
 // When the clock runs out she crosses to the middle of the screen the user is on, then goes home.
 async function comeToCenter() {
-  if (isMoving || isCentering || !win) return
+  if (isMoving || isCentering || !alive()) return
 
   isCentering = true
   const [homeX, homeY] = win.getPosition()
@@ -123,6 +128,7 @@ const fill = (template, values) => template.replace(/\{(\w+)\}/g, (_, key) => va
 
 // Named spots on the screen she is on; the choice is remembered like a manual move.
 function placeAt(where) {
+  if (!alive()) return false
   const [x, y] = win.getPosition()
   const { workArea: a } = screen.getDisplayNearestPoint({ x, y })
   const left = a.x + 20
@@ -165,6 +171,7 @@ function readCachedWalk() {
 
 // While moving she rides the cursor, so the window never has to take a click.
 function toggleMove() {
+  if (!alive()) return
   isMoving = !isMoving
   if (!isMoving) {
     const [x, y] = win.getPosition()
@@ -374,7 +381,7 @@ async function handle(req, res) {
         }
         saveConfig({ [event.part]: event.color })
       }
-      if (win) win.webContents.send('claudia-chan', event)
+      if (alive()) win.webContents.send('claudia-chan', event)
       res.writeHead(204).end()
     } catch {
       res.writeHead(400).end()
@@ -396,8 +403,7 @@ async function handle(req, res) {
   fs.createReadStream(file).pipe(res)
 }
 
-function createWindow() {
-  const area = screen.getPrimaryDisplay().workArea
+function openAvatar(area) {
   win = new BrowserWindow({
     width: WIDTH,
     height: HEIGHT,
@@ -415,11 +421,23 @@ function createWindow() {
   win.setVisibleOnAllWorkspaces(true)
   win.setIgnoreMouseEvents(true)
   win.loadURL(`http://127.0.0.1:${PORT}/`)
+  // If the page crashes reload it; if the window itself goes away, bring her back instead of leaving a headless app.
+  win.webContents.on('render-process-gone', () => { if (alive()) win.reload() })
+  win.on('closed', () => {
+    win = null
+    if (!quitting) setTimeout(() => openAvatar(screen.getPrimaryDisplay().workArea), 1000)
+  })
+}
+
+function createWindow() {
+  const area = screen.getPrimaryDisplay().workArea
+  openAvatar(area)
   setInterval(warnIfTired, 30000)
   setInterval(warnOutOfHours, 30000)
   if (!readConfig().firstSeen) saveConfig({ firstSeen: Date.now() })
 
   setInterval(() => {
+    if (!alive()) return
     const cursor = screen.getCursorScreenPoint()
     if (isMoving) win.setPosition(cursor.x - Math.round(WIDTH / 2), cursor.y - 120)
     walk(area)
@@ -447,4 +465,5 @@ app.whenReady().then(() => {
   console.log('move shortcut registered:', globalShortcut.register(MOVE_KEY, toggleMove))
   console.log('listen shortcut registered:', globalShortcut.register(LISTEN_KEY, toggleListen))
 })
+app.on('before-quit', () => { quitting = true })
 app.on('will-quit', () => globalShortcut.unregisterAll())
