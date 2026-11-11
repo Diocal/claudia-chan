@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html { background: #c9b8d8 !important; }
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  /* She fades out at the waist instead of being sliced by the window edge. */
+  canvas {
+    position: fixed; inset: 0;
+    -webkit-mask-image: linear-gradient(#000 80%, transparent 99%);
+  }
+  #bubble {
+    position: fixed; top: 10px; left: 20px; right: 20px; padding: 10px 14px;
+    background: #fff; color: #2a2030; border-radius: 16px;
+    font: 600 15px system-ui, sans-serif; text-align: center;
+    opacity: 0; transition: opacity .25s;
+  }
+  #bubble.on { opacity: 1; }
+  #hint {
+    position: fixed; z-index: 2; bottom: 16px; left: 40px; right: 40px; padding: 6px 10px;
+    background: #ff5fa2; color: #fff; border-radius: 12px; display: none;
+    font: 700 13px system-ui, sans-serif; text-align: center;
+    animation: rub 1s ease-in-out infinite alternate;
+  }
+  #hint.on { display: block; }
+  #move {
+    position: fixed; bottom: 16px; left: 30px; right: 30px; padding: 8px 10px; display: none;
+    background: #4f8ff0; color: #fff; border-radius: 12px;
+    font: 700 13px system-ui, sans-serif; text-align: center;
+  }
+  #move.on { display: block; }
+  #mic {
+    position: fixed; z-index: 2; bottom: 16px; left: 30px; right: 30px; padding: 8px 10px; display: none;
+    background: #e0406a; color: #fff; border-radius: 12px;
+    font: 700 13px system-ui, sans-serif; text-align: center;
+  }
+  #mic.on { display: block; }
+  @keyframes rub { from { transform: translateX(-14px); } to { transform: translateX(14px); } }
+  .heart {
+    position: fixed; top: 150px; color: #ff4d94; font-size: 28px;
+    animation: rise 1.4s ease-out forwards;
+  }
+  @keyframes rise { to { transform: translateY(-110px) scale(1.5); opacity: 0; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "/node_modules/three/build/three.module.js",
+  "three/addons/": "/node_modules/three/examples/jsm/",
+  "@pixiv/three-vrm": "/node_modules/@pixiv/three-vrm/lib/three-vrm.module.js"
+} }
+</script>
+</head>
+<body>
+<div id="bubble"></div>
+<div id="hint">↔ Pasa el cursor de lado a lado sobre mi cabeza</div>
+<div id="mic">🎤 Te escucho… Ctrl+Alt+V para terminar</div>
+<div id="move">Te sigo con el cursor. Ctrl+Alt+C para soltarme aquí</div>
+<script>
+  // Dev only: stands in for preload.js so poses can be checked in a plain browser.
+  // /dev/poses.html?act=typing&mood=celosa
+  const q = new URLSearchParams(location.search)
+  const listeners = []
+  window.claudiaChan = { onEvent: cb => listeners.push(cb) }
+  window.claudiaPixelRatio = 1
+  if (q.get('pose')) window.customPose = JSON.parse(q.get('pose'))
+  window.emit = e => listeners.forEach(cb => cb(e))
+  const wait = setInterval(() => {
+    if (!window.claudiaReady) return
+    clearInterval(wait)
+    if (q.get('mood')) emit({ mood: q.get('mood') })
+    if (q.get('act')) emit({ type: 'doing', name: q.get('act') })
+    setTimeout(() => { document.title = 'ready' }, Number(q.get('settle') ?? 1500))
+  }, 50)
+</script>
+<script type="module" src="/avatar.js"></script>
+</body>
+</html>

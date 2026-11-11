@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm'
 import { playSound, playSpeech, setMuted } from '/sounds.js'
+import { ACTIVITIES, REST, makeProps } from '/activities.js'
 
 // Brief expressions layered over the lasting mood.
 const REACTIONS = {
@@ -89,6 +90,16 @@ let scold = 0
 let nextZ = 0
 let walking = 0
 let shownShape
+// What she is doing (activities.js); `activityUntil` sends a timed one back to idle.
+let activity = 'idle'
+let activityUntil = 0
+let lastBusy = 0
+const bodyPose = Object.fromEntries(Object.entries(REST).map(([bone, r]) => [bone, [...r]]))
+const props = makeProps()
+props.laptop.visible = false
+props.phone.visible = false
+scene.add(props.laptop)
+let bounce = 0
 
 // Skin keeps its texture; the others start from a neutral copy so that a dark
 // texture can still become blonde or pink.
@@ -211,6 +222,11 @@ new GLTFLoader()
     pose('leftLowerArm', 0, -0.2, 0)
     pose('rightLowerArm', 0, 0.2, 0)
     relaxHands()
+    const hand = vrm.humanoid.getRawBoneNode('rightHand')
+    if (hand) {
+      hand.add(props.phone)
+      props.phone.position.set(0, -0.06, 0.04)
+    }
     applySavedStyle().then(() => { window.claudiaReady = true })
   }, undefined, error => console.error(error))
 
@@ -259,6 +275,16 @@ window.claudiaChan.onEvent(event => {
   }
   if (event.type === 'mute') {
     setMuted(event.value)
+    return
+  }
+  if (event.type === 'doing') {
+    if (ACTIVITIES[event.name]) {
+      activity = event.name
+      // Untimed work still ends: if nothing new arrives in 90 s the session probably went away.
+      activityUntil = clock.elapsedTime + (event.seconds ?? (event.name === 'idle' ? 0 : 90))
+      if (event.name === 'idle') activityUntil = 0
+      if (event.name !== 'idle') lastBusy = clock.elapsedTime
+    }
     return
   }
   if (event.type === 'react') {
@@ -319,15 +345,43 @@ renderer.setAnimationLoop(() => {
     setExpressions(dt)
     const breath = Math.sin(t * 1.6)
     pose('chest', breath * 0.015, 0, 0)
-    pose('spine', 0, Math.sin(t * 0.5) * 0.02, Math.sin(t * 0.7) * 0.012)
+    // Timed activities end; a long idle turns into a stretch, the phone, or sleep at night.
+    if (activityUntil && t > activityUntil) { activity = 'idle'; activityUntil = 0 }
+    if (activity === 'idle' && t - lastBusy > 45) {
+      const late = new Date().getHours() < 6
+      activity = late ? 'sleepy' : Math.random() < 0.5 ? 'stretch' : 'phone'
+      activityUntil = late ? 0 : t + (activity === 'stretch' ? 3 : 8)
+      lastBusy = t
+    }
+    // Jealous and with nothing to do, she stands there with her arms crossed.
+    const shown = activity === 'idle' && (mood === 'celosa' || mood === 'yandere') ? 'pout' : activity
+    const goal = ACTIVITIES[shown](t)
+    for (const bone of Object.keys(REST)) {
+      const target = goal[bone] ?? REST[bone]
+      for (let i = 0; i < 3; i++) bodyPose[bone][i] = THREE.MathUtils.damp(bodyPose[bone][i], target[i], 7, dt)
+    }
+    bounce = THREE.MathUtils.damp(bounce, goal.bounce ?? 0, 12, dt)
+    vrm.scene.position.y = bounce
+    props.laptop.visible = Boolean(goal.laptop)
+    props.phone.visible = Boolean(goal.phone)
+    if (goal.laptop) props.drawScreen(t)
+    for (const bone of ['leftUpperArm', 'leftLowerArm', 'leftHand', 'rightHand', 'neck']) pose(bone, ...bodyPose[bone])
+    const [sx, sy, sz] = bodyPose.spine
+    pose('spine', sx, sy + Math.sin(t * 0.5) * 0.02, sz + Math.sin(t * 0.7) * 0.012)
     const nuzzle = petTime > 0 ? Math.sin(t * 7) * 0.09 : 0
     headTilt = THREE.MathUtils.damp(headTilt, reaction?.tilt ?? 0, 6, dt)
     headNod = THREE.MathUtils.damp(headNod, reaction?.nod ?? 0, 6, dt)
-    pose('head', (gaze.position.y < 1.3 ? 0.05 : -0.03) + headNod, gaze.position.x * 0.12, nuzzle + headTilt)
+    const [hx, hy, hz] = bodyPose.head
+    // While busy she looks at her work, not at the cursor.
+    const look = shown === 'idle' || shown === 'listening' ? 1 : 0.25
+    pose('head', ((gaze.position.y < 1.3 ? 0.05 : -0.03) + headNod) * look + hx, gaze.position.x * 0.12 * look + hy, nuzzle + headTilt + hz)
     // Raised forearm, wagging: scolding, or showing her hand in a game.
     scold = THREE.MathUtils.damp(scold, reaction?.raisesArm ? 1 : 0, 7, dt)
-    pose('rightUpperArm', scold * -1.25, 0, THREE.MathUtils.lerp(1.2, 1.0, scold))
-    pose('rightLowerArm', 0, THREE.MathUtils.lerp(0.2, 1.7, scold) + (reaction?.hand ? 0 : scold * Math.sin(t * 10) * 0.2), 0)
+    // The scolding arm (a reaction) wins over the activity's right arm.
+    const [ux, uy, uz] = bodyPose.rightUpperArm
+    const [lx, ly, lz] = bodyPose.rightLowerArm
+    pose('rightUpperArm', THREE.MathUtils.lerp(ux, -1.25, scold), uy * (1 - scold), THREE.MathUtils.lerp(uz, 1.0, scold))
+    pose('rightLowerArm', lx * (1 - scold), THREE.MathUtils.lerp(ly, 1.7, scold) + (reaction?.hand ? 0 : scold * Math.sin(t * 10) * 0.2), lz * (1 - scold))
     const shape = HAND_SHAPES[reaction?.hand]
     if (shape !== shownShape) {
       shownShape = shape

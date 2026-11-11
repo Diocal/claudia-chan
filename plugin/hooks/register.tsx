@@ -502,6 +502,9 @@ async function paint($: Engine) {
 }
 
 // Detached so the window outlives this call; a second launch exits by itself.
+// Tools that look rather than write: she reads along instead of typing.
+const READING_TOOLS = new Set(['Read', 'Grep', 'Glob', 'WebFetch', 'WebSearch', 'LSP', 'Agent', 'ToolSearch'])
+
 async function isDismissed($: Engine) {
   const saved = await $.process.run(['cat', `${avatarDir($)}/config.json`]).catch(() => undefined)
   try {
@@ -578,6 +581,7 @@ export const register: Register = on => {
     }
     await paint($)
     await tell($, { type: 'react', name: 'feliz', sound: 'saludo', seconds: 3 })
+    await tell($, { type: 'doing', name: 'wave', seconds: 3 })
 
     return next(e)
   })
@@ -699,6 +703,8 @@ export const register: Register = on => {
       lastPrompt = Date.now()
       nextTalk ||= lastPrompt + 6 * 60000
       await tell($, { type: 'activity' })
+      // She turns to listen to you before getting to work.
+      await tell($, { type: 'doing', name: 'listening', seconds: 3 })
       await beat($, isInteractive)
 
       const named = e.text.match(new RegExp(RIVALS.source, 'gi')) ?? []
@@ -709,6 +715,7 @@ export const register: Register = on => {
         await update($, heart, h => feel(h, rivals > 0 ? rivals * 40 : -30, isSweet ? 3 : 0))
         await paint($)
         if (isSweet) await tell($, { type: 'react', name: 'sonrojada', sound: 'sonrojo', seconds: 4 })
+        if (rivals > 0) await tell($, { type: 'doing', name: 'pout', seconds: 6 })
       }
     }
 
@@ -719,17 +726,25 @@ export const register: Register = on => {
     const isOn = (await read($, heart)).isOn
     const isWriting = e.tool === 'Edit' || e.tool === 'Write'
 
-    if (isOn) await tell($, { type: 'react', name: isWriting ? 'concentrada' : 'pensando', seconds: 4 })
+    const isTest = e.tool === 'Bash' && /\b(test|pytest|jest|vitest|cargo test|go test)\b/.test(e.command)
+    if (isOn) {
+      await tell($, { type: 'react', name: isWriting ? 'concentrada' : 'pensando', seconds: 4 })
+      // Her body follows the work: typing while Claude writes, reading while it looks, nervous while tests run.
+      await tell($, { type: 'doing', name: isTest ? 'nervous' : READING_TOOLS.has(e.tool) ? 'reading' : 'typing' })
+    }
 
     const ran = await next(e)
 
     if (isOn && e.tool === 'Bash') {
       if (ran.isError) {
         await tell($, { type: 'react', name: 'triste', sound: 'error', seconds: 4 })
-      } else if (/\b(test|pytest|jest|vitest)\b/.test(e.command)) {
+        await tell($, { type: 'doing', name: 'facepalm', seconds: 2.5 })
+      } else if (isTest) {
         await tell($, { type: 'react', name: 'feliz', sound: 'exito', seconds: 4 })
+        await tell($, { type: 'doing', name: 'celebrate', seconds: 2.5 })
       } else if (/\bgit commit\b/.test(e.command)) {
         await tell($, { type: 'react', name: 'guino', sound: 'guino', seconds: 3 })
+        await tell($, { type: 'doing', name: 'celebrate', seconds: 2 })
       }
     }
 
@@ -757,6 +772,8 @@ export const register: Register = on => {
       })
       await paint($)
       const line = firstSentence(e.answer)
+      // Done: a little cheer, then she goes back to idling.
+      await tell($, { type: 'doing', name: 'celebrate', seconds: 2 })
       await tell($, { type: 'react', name: 'feliz', sound: line ? undefined : 'listo', seconds: 3, line: line || undefined })
       const finished = await next(e)
       await sayInJapanese($, line).catch(() => undefined)
