@@ -1,5 +1,5 @@
 // Floating avatar window. Claude Code talks to it through a loopback HTTP port.
-const { app, BrowserWindow, globalShortcut, screen } = require('electron')
+const { app, BrowserWindow, globalShortcut, Menu, nativeImage, screen, Tray } = require('electron')
 const { spawn, execFile } = require('child_process')
 const os = require('os')
 const http = require('http')
@@ -40,6 +40,7 @@ let tiredMinutes = 0
 let isMoving = false
 const MOVE_KEY = 'CommandOrControl+Alt+C'
 const LISTEN_KEY = 'CommandOrControl+Alt+V'
+const HIDE_KEY = 'CommandOrControl+Alt+H'
 const MAX_LISTEN_MS = 60000
 const SKIN = ['#fff4ef', '#ffe3e0', '#f9e6d6', '#f6dcc4']
 const SETTINGS = {
@@ -143,6 +144,40 @@ function placeAt(where) {
 
   glide(...spots[where], 900).then(() => saveConfig({ x: spots[where][0], y: spots[where][1] }))
   return true
+}
+
+// Hide or show her without closing the app (the mic and the plugin keep working).
+function toggleVisible() {
+  if (!alive()) return
+  if (win.isVisible()) win.hide()
+  else win.showInactive()
+  refreshTray()
+}
+
+// "Cerrar" sticks: the plugin does not relaunch her until a new claude-chan session or /claudia on.
+function dismiss() {
+  saveConfig({ dismissed: true })
+  app.quit()
+}
+
+let tray = null
+function refreshTray() {
+  if (!tray) return
+  const shown = alive() && win.isVisible()
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: shown ? 'Ocultar (Ctrl+Alt+H)' : 'Mostrar (Ctrl+Alt+H)', click: toggleVisible },
+    { label: 'Hablarle (Ctrl+Alt+V)', click: toggleListen },
+    { label: 'Moverla (Ctrl+Alt+C)', click: toggleMove },
+    { label: 'Panel de ajustes', click: openPanel },
+    { type: 'separator' },
+    { label: 'Cerrar Claudia-chan', click: dismiss },
+  ]))
+}
+
+function setupTray() {
+  tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'assets/tray.png')))
+  tray.setToolTip('Claudia-chan')
+  refreshTray()
 }
 
 function openPanel() {
@@ -461,9 +496,15 @@ function createWindow() {
 app.commandLine.appendSwitch('enable-transparent-visuals')
 app.whenReady().then(() => {
   app.dock?.hide()
-  http.createServer(handle).on('error', () => app.exit(1)).listen(PORT, '127.0.0.1', createWindow)
+  // Whoever started her wants her: a previous "Cerrar" no longer applies.
+  saveConfig({ dismissed: false })
+  http.createServer(handle).on('error', () => app.exit(1)).listen(PORT, '127.0.0.1', () => {
+    createWindow()
+    setupTray()
+  })
   console.log('move shortcut registered:', globalShortcut.register(MOVE_KEY, toggleMove))
   console.log('listen shortcut registered:', globalShortcut.register(LISTEN_KEY, toggleListen))
+  console.log('hide shortcut registered:', globalShortcut.register(HIDE_KEY, toggleVisible))
 })
 app.on('before-quit', () => { quitting = true })
 app.on('will-quit', () => globalShortcut.unregisterAll())

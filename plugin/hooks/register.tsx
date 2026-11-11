@@ -386,7 +386,8 @@ async function beat($: Engine, canLaunch: boolean) {
 
   const answer = await tell($, { type: 'beat' })
 
-  if (!answer?.ok && canLaunch) await launchAvatar($)
+  // Closed from her tray menu: stay closed until a new session or /claudia on.
+  if (!answer?.ok && canLaunch && !(await isDismissed($))) await launchAvatar($)
   const { pets = 0, tiredMinutes = 0, name, bond, personalidad, voz, idioma } = answer?.ok
     ? (JSON.parse(answer.text) as {
         pets?: number
@@ -501,6 +502,15 @@ async function paint($: Engine) {
 }
 
 // Detached so the window outlives this call; a second launch exits by itself.
+async function isDismissed($: Engine) {
+  const saved = await $.process.run(['cat', `${avatarDir($)}/config.json`]).catch(() => undefined)
+  try {
+    return (JSON.parse(saved?.stdout ?? '{}') as { dismissed?: boolean }).dismissed === true
+  } catch {
+    return false
+  }
+}
+
 async function launchAvatar($: Engine) {
   await $.process
     .run([
