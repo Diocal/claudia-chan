@@ -18,8 +18,8 @@ const PANE = {
 test('naming a rival twice turns her yandere', async ($, on) => {
   on('prompt.submit', (_, e) => ({ text: e.text }))
 
-  await $.prompt.submit({ text: 'probé Cursor' })
-  await $.prompt.submit({ text: 'y también ChatGPT' })
+  await $.prompt.submit({ text: 'probé Cursor' } as any)
+  await $.prompt.submit({ text: 'y también ChatGPT' } as any)
 
   const ui = await $.ui.mount(PANE)
   expect((await ui.find({ type: 'Text', text: /yandere/ }))?.text).toContain('celos')
