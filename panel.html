@@ -35,8 +35,9 @@ const CHOICES = {
   velocidad: ['lenta', 'normal', 'rapida'],
   tamano: ['chico', 'normal', 'grande'],
   pasear: ['off', 'on'],
+  idioma: ['es', 'en', 'ru', 'pt', 'ja'],
 }
-const DEFAULTS = { personalidad: 'yandere', voz: 'espanol', tono: 'normal', velocidad: 'normal', tamano: 'normal', pasear: 'off', modelo: 'sample' }
+const DEFAULTS = { personalidad: 'yandere', voz: 'espanol', tono: 'normal', velocidad: 'normal', tamano: 'normal', pasear: 'off', idioma: 'es', modelo: 'vita' }
 const root = document.getElementById('root')
 const send = body => fetch('/event', { method: 'POST', headers: { 'x-claudia-chan': '1' }, body: JSON.stringify(body) })
 
@@ -57,16 +58,26 @@ function group(title, items, isOn, choose, isSwatch) {
   root.append(h, row)
 }
 
-Promise.all([fetch('/config.json').then(r => r.json()).catch(() => ({})), fetch('/models').then(r => r.json())]).then(([config, models]) => {
+Promise.all([fetch('/config.json').then(r => r.json()).catch(() => ({})), fetch('/models').then(r => r.json()), fetch('/i18n.json').then(r => r.json())]).then(([config, models, i18n]) => {
+  const L = i18n[config.idioma ?? 'es'].panel
+  document.querySelector('h1').textContent = L.heading
   const name = Object.assign(document.createElement('input'), { value: config.name ?? 'Claudia-chan', maxLength: 24 })
   name.onchange = () => send({ type: 'name', value: name.value.trim() || 'Claudia-chan' })
-  root.append(Object.assign(document.createElement('h2'), { textContent: 'nombre' }), name)
+  root.append(Object.assign(document.createElement('h2'), { textContent: L.nombre }), name)
   for (const [part, list] of Object.entries(COLORS)) {
-    group(part, list, ([, c]) => (config[part] ?? null) === c, ([, c]) => send({ type: 'style', part, color: c }), true)
+    group(L[part], list, ([, c]) => (config[part] ?? null) === c, ([, c]) => send({ type: 'style', part, color: c }), true)
   }
   for (const [key, list] of Object.entries({ ...CHOICES, modelo: models })) {
-    group(key, list, v => (config[key] ?? DEFAULTS[key]) === v, v => send({ type: 'setting', key, value: v }))
+    group(L[key], list, v => (config[key] ?? DEFAULTS[key]) === v, v => send({ type: 'setting', key, value: v }).then(() => { if (key === 'idioma') location.reload() }))
   }
+  root.append(Object.assign(document.createElement('h2'), { textContent: L.lugar }))
+  const places = Object.assign(document.createElement('div'), { className: 'row' })
+  for (const where of ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center', 'cursor']) {
+    const b = Object.assign(document.createElement('button'), { textContent: L[where] })
+    b.onclick = () => send(where === 'cursor' ? { type: 'move' } : { type: 'place', where })
+    places.append(b)
+  }
+  root.append(places)
 })
 </script>
 </body>

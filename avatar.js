@@ -30,7 +30,7 @@ const MOODS = {
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, premultipliedAlpha: true })
 renderer.setClearColor(0x000000, 0)
 // Rendered at twice the size: the ink outlines stay smooth in a small window.
-renderer.setPixelRatio(Math.max(2, window.devicePixelRatio))
+renderer.setPixelRatio(window.claudiaPixelRatio ?? Math.max(2, window.devicePixelRatio))
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
@@ -72,7 +72,13 @@ const STYLE_MATCH = {
   ojos: /EyeIris/,
   ropa: /Tops_\d+_CLOTH/,
 }
-const PET_LINES = ['Nnn~ otra vez...', 'S-solo tú puedes hacer eso (⁄ ⁄>⁄ω⁄<⁄ ⁄)', 'Kyaa~ tu cursor es tibio', 'Ya no estoy enojada. Casi.']
+const I18N = await fetch('/i18n.json').then(r => r.json())
+let language = I18N.es
+
+function applyLanguage(code) {
+  language = I18N[code] ?? I18N.es
+  for (const id of ['hint', 'move', 'mic']) document.getElementById(id).textContent = language[id]
+}
 let petTime = 0
 let reaction = null
 let reactionTime = 0
@@ -147,6 +153,7 @@ async function applySavedStyle() {
   for (const part of Object.keys(STYLE_MATCH)) applyStyle(part, config[part] ?? null)
   document.getElementById('hint').classList.toggle('on', !config.petDone)
   setMuted(config.muted)
+  applyLanguage(config.idioma)
   baseCamera.z = CAMERA_DISTANCE[config.tamano] ?? CAMERA_DISTANCE.normal
 }
 
@@ -162,7 +169,9 @@ function spawnHearts(symbol = '♥') {
 
 function pose(name, x, y, z) {
   const bone = vrm.humanoid.getNormalizedBoneNode(name)
-  if (bone) bone.rotation.set(x, y, z)
+  // VRM 0 models face the other way, which mirrors the x and z rotations.
+  const flip = vrm.meta.metaVersion === '0' ? -1 : 1
+  if (bone) bone.rotation.set(flip * x, y, flip * z)
 }
 
 function curlFinger(side, finger, amount) {
@@ -186,7 +195,7 @@ const HAND_SHAPES = {
 }
 
 const loadedConfig = await fetch('/config.json').then(r => r.json()).catch(() => ({}))
-const modelFile = loadedConfig.modelo && loadedConfig.modelo !== 'sample' ? `/assets/models/${loadedConfig.modelo}.vrm` : '/assets/sample.vrm'
+const modelFile = (loadedConfig.modelo ?? 'vita') === 'sample' ? '/assets/sample.vrm' : `/assets/models/${loadedConfig.modelo ?? 'vita'}.vrm`
 
 new GLTFLoader()
   .register(parser => new VRMLoaderPlugin(parser))
@@ -202,7 +211,7 @@ new GLTFLoader()
     pose('leftLowerArm', 0, -0.2, 0)
     pose('rightLowerArm', 0, 0.2, 0)
     relaxHands()
-    applySavedStyle()
+    applySavedStyle().then(() => { window.claudiaReady = true })
   }, undefined, error => console.error(error))
 
 window.claudiaChan.onEvent(event => {
@@ -218,12 +227,16 @@ window.claudiaChan.onEvent(event => {
     petTime = 2.2
     playSound('caricia')
     spawnHearts()
-    say(PET_LINES[Math.floor(Math.random() * PET_LINES.length)])
+    say(language.pet[Math.floor(Math.random() * language.pet.length)])
     document.getElementById('hint').classList.remove('on')
     return
   }
   if (event.type === 'moving') {
     document.getElementById('move').classList.toggle('on', event.value)
+    return
+  }
+  if (event.type === 'mouth') {
+    speakTime = event.seconds
     return
   }
   if (event.type === 'speak') {
@@ -239,6 +252,7 @@ window.claudiaChan.onEvent(event => {
     return
   }
   if (event.type === 'setting') {
+    if (event.key === 'idioma') applyLanguage(event.value)
     if (event.key === 'tamano') baseCamera.z = CAMERA_DISTANCE[event.value]
     if (event.key === 'pasear' && event.value === 'off') walking = 0
     return
@@ -298,6 +312,8 @@ renderer.setAnimationLoop(() => {
   key.color.lerp(new THREE.Color(setting.light), 0.08)
   camera.position.z = THREE.MathUtils.damp(camera.position.z, baseCamera.z - setting.zoom * 1.1, 3, dt)
   camera.position.y = THREE.MathUtils.damp(camera.position.y, baseCamera.y + setting.zoom * 0.22, 3, dt)
+  // Only the promo renderer sets this, to frame shots from other angles.
+  window.claudiaCameraHook?.(camera, vrm)
 
   if (vrm) {
     setExpressions(dt)

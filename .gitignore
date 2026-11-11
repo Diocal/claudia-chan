@@ -3,3 +3,7 @@ vendor/
 config.json
 plugin/.claude-plugin/types/
 *.log
+promo/
+.studio.lock
+# License unclear ("Other", no URL): kept local only
+assets/models/avatarsample-a.vrm

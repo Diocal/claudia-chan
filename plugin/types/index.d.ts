@@ -10,6 +10,7 @@ export type Heart = {
   petCount: number
   personalidad: string
   voz: string
+  idioma: string
   level: number
   affection: number
 }

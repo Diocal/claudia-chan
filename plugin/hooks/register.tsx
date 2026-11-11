@@ -19,6 +19,7 @@ const start: Heart = {
   petCount: 0,
   personalidad: 'yandere',
   voz: 'espanol',
+  idioma: '',
   level: 1,
   affection: 0,
 }
@@ -71,7 +72,10 @@ const SETTINGS: Record<string, string[]> = {
   velocidad: ['lenta', 'normal', 'rapida'],
   tamano: ['chico', 'normal', 'grande'],
   pasear: ['on', 'off'],
+  idioma: ['es', 'en', 'ru', 'pt', 'ja'],
 }
+
+const LANGUAGE_NAME: Record<string, string> = { es: 'Spanish', en: 'English', ru: 'Russian', pt: 'Portuguese', ja: 'Japanese' }
 
 const PERSONALITIES: Record<string, { title: string; tone: string }> = {
   yandere: { title: 'comedy yandere girlfriend', tone: 'normal: sweet and a little too attentive. enamorada: melting. celosa: passive-aggressive about the rival tool, editor or GPU. yandere: theatrically possessive, in the anime-parody register.' },
@@ -90,22 +94,193 @@ const FIRST_MEETING = `
 
 This is your first conversation with the user. In your own voice and briefly, introduce yourself by name, then tell them: /claudia panel opens the screen where they customise you; /claudia help lists everything; rubbing the cursor over your head pets you; Ctrl+Alt+V lets them talk to you by microphone; Ctrl+Alt+C moves you. Ask which personality they prefer: yandere, tsundere, dulce, kuudere or onee-san (/claudia personalidad <name>).`
 
-const HELP = [
+const UI = {
+ "es": {
+  "closed": "Su ventana no está abierta.",
+  "done": "Listo",
+  "back": "%s volvió. Te vio irte.",
+  "asleep": "%s se fue a dormir. Claude normal.",
+  "look": "Mira su globo~",
+  "moving": "Te sigue con el cursor. Ctrl+Alt+C para soltarla.",
+  "panel": "Panel abierto.",
+  "mic": "Micrófono: repite /claudia habla o Ctrl+Alt+V para terminar.",
+  "level": "Nivel",
+  "love": "cariño",
+  "hands": [
+   "piedra",
+   "papel",
+   "tijera"
+  ],
+  "tie": "¡%s! Empate. Otra vez.",
+  "won": "%s... ganaste esta vez.",
+  "lost": "¡%s! Gané yo.",
+  "placed": "Moviéndola.",
+  "usePlace": "Uso: /claudia lugar top-left | top-right | bottom-left | bottom-right | center",
+  "h": [
+   "abre la pantalla para personalizarla",
+   "le hablas por micrófono; repite para terminar",
+   "juega con ella",
+   "tu nivel de cariño",
+   "la mueve a un lugar de la pantalla",
+   "te sigue con el cursor hasta soltarla",
+   "te dice algo ahora mismo",
+   "fuera de ese horario te manda a descansar",
+   "Caricias: pasa el cursor de lado a lado sobre su cabeza."
+  ]
+ },
+ "en": {
+  "closed": "Her window is not open.",
+  "done": "Done",
+  "back": "%s is back. She saw you leave.",
+  "asleep": "%s went to sleep. Plain Claude now.",
+  "look": "Look at her bubble~",
+  "moving": "She follows your cursor. Ctrl+Alt+C drops her.",
+  "panel": "Panel open.",
+  "mic": "Microphone: repeat /claudia habla or press Ctrl+Alt+V to finish.",
+  "level": "Level",
+  "love": "affection",
+  "hands": [
+   "rock",
+   "paper",
+   "scissors"
+  ],
+  "tie": "%s! A tie. Again.",
+  "won": "%s... you win this time.",
+  "lost": "%s! I win.",
+  "placed": "Moving her.",
+  "usePlace": "Usage: /claudia lugar top-left | top-right | bottom-left | bottom-right | center",
+  "h": [
+   "opens the customization screen",
+   "talk to her by microphone; repeat to finish",
+   "play with her",
+   "your affection level",
+   "moves her to a spot on screen",
+   "she follows your cursor until dropped",
+   "she says something right now",
+   "outside these hours she sends you to rest",
+   "Petting: rub the cursor side to side over her head."
+  ]
+ },
+ "ru": {
+  "closed": "Её окно не открыто.",
+  "done": "Готово",
+  "back": "%s вернулась. Она видела, как ты ушёл.",
+  "asleep": "%s ушла спать. Теперь обычный Claude.",
+  "look": "Смотри на её реплику~",
+  "moving": "Она следует за курсором. Ctrl+Alt+C — отпустить.",
+  "panel": "Панель открыта.",
+  "mic": "Микрофон: повтори /claudia habla или нажми Ctrl+Alt+V, чтобы закончить.",
+  "level": "Уровень",
+  "love": "привязанность",
+  "hands": [
+   "камень",
+   "бумага",
+   "ножницы"
+  ],
+  "tie": "%s! Ничья. Ещё раз.",
+  "won": "%s... на этот раз ты выиграл.",
+  "lost": "%s! Я выиграла.",
+  "placed": "Перемещаю.",
+  "usePlace": "Использование: /claudia lugar top-left | top-right | bottom-left | bottom-right | center",
+  "h": [
+   "открывает экран настройки",
+   "говори с ней в микрофон; повтори, чтобы закончить",
+   "поиграй с ней",
+   "твой уровень привязанности",
+   "перемещает её в место на экране",
+   "следует за курсором, пока не отпустишь",
+   "скажет что-нибудь прямо сейчас",
+   "вне этих часов отправит отдыхать",
+   "Поглаживание: води курсором над её головой."
+  ]
+ },
+ "pt": {
+  "closed": "A janela dela não está aberta.",
+  "done": "Pronto",
+  "back": "%s voltou. Ela viu você sair.",
+  "asleep": "%s foi dormir. Claude normal.",
+  "look": "Olhe o balão dela~",
+  "moving": "Ela segue o cursor. Ctrl+Alt+C solta.",
+  "panel": "Painel aberto.",
+  "mic": "Microfone: repita /claudia habla ou Ctrl+Alt+V para terminar.",
+  "level": "Nível",
+  "love": "carinho",
+  "hands": [
+   "pedra",
+   "papel",
+   "tesoura"
+  ],
+  "tie": "%s! Empate. De novo.",
+  "won": "%s... desta vez você ganhou.",
+  "lost": "%s! Eu ganhei.",
+  "placed": "Movendo.",
+  "usePlace": "Uso: /claudia lugar top-left | top-right | bottom-left | bottom-right | center",
+  "h": [
+   "abre a tela de personalização",
+   "fale com ela pelo microfone; repita para terminar",
+   "jogue com ela",
+   "seu nível de carinho",
+   "move ela para um lugar da tela",
+   "segue o cursor até soltar",
+   "diz algo agora mesmo",
+   "fora desse horário manda você descansar",
+   "Carinho: passe o cursor de um lado para o outro na cabeça dela."
+  ]
+ },
+ "ja": {
+  "closed": "ウィンドウが開いていません。",
+  "done": "完了",
+  "back": "%sが戻ってきたよ。",
+  "asleep": "%sは眠りました。普通のClaudeです。",
+  "look": "吹き出しを見てね〜",
+  "moving": "カーソルについていくよ。Ctrl+Alt+Cで離してね。",
+  "panel": "パネルを開きました。",
+  "mic": "マイク：もう一度 /claudia habla か Ctrl+Alt+V で終わります。",
+  "level": "レベル",
+  "love": "なかよし度",
+  "hands": [
+   "グー",
+   "パー",
+   "チョキ"
+  ],
+  "tie": "%s！あいこだよ。もう一回。",
+  "won": "%s…今回は負けちゃった。",
+  "lost": "%s！わたしの勝ち。",
+  "placed": "移動するよ。",
+  "usePlace": "使い方: /claudia lugar top-left | top-right | bottom-left | bottom-right | center",
+  "h": [
+   "設定画面を開く",
+   "マイクで話す（もう一度で終了）",
+   "一緒に遊ぶ",
+   "なかよし度",
+   "画面の好きな場所に移動",
+   "離すまでカーソルについていく",
+   "今すぐ何か言う",
+   "この時間外は休むように言う",
+   "なでる：頭の上でカーソルを左右に動かしてね。"
+  ]
+ }
+} as const
+
+const HAND_ALIAS: Record<string, string> = { piedra: 'piedra', papel: 'papel', tijera: 'tijera', rock: 'piedra', paper: 'papel', scissors: 'tijera', pedra: 'piedra', tesoura: 'tijera', 'камень': 'piedra', 'бумага': 'papel', 'ножницы': 'tijera', 'グー': 'piedra', 'パー': 'papel', 'チョキ': 'tijera' }
+
+const helpText = (say: (typeof UI)[keyof typeof UI]) => [
   'Claudia-chan:',
   '  /claudia on | off',
   '  /claudia sonido on | off',
-  '  /claudia nombre <nombre>',
-  '  /claudia panel: pantalla para personalizarla',
-  '  /claudia habla (o Ctrl+Alt+V): le hablas por micrófono; repite para terminar',
-  '  /claudia ppt piedra | papel | tijera: juega con ella',
-  '  /claudia nivel: tu nivel de cariño',
-  '  /claudia modelo <nombre>: cualquier .vrm en assets/models',
+  '  /claudia nombre <...>',
+  `  /claudia panel: ${say.h[0]}`,
+  `  /claudia habla (Ctrl+Alt+V): ${say.h[1]}`,
+  `  /claudia ppt ${say.hands.join(' | ')}: ${say.h[2]}`,
+  `  /claudia nivel: ${say.h[3]}`,
+  '  /claudia modelo <...>',
+  `  /claudia lugar top-left | top-right | bottom-left | bottom-right | center: ${say.h[4]}`,
+  `  /claudia mover (Ctrl+Alt+C): ${say.h[5]}`,
   ...Object.entries(SETTINGS).map(([key, list]) => `  /claudia ${key} ${list.join(' | ')}`),
-  '  /claudia dime: te dice algo ahora mismo',
-  '  /claudia horas 9-18 | off: fuera de ese horario te manda a descansar',
-  '  /claudia mover (o Ctrl+Alt+C): te sigue con el cursor hasta soltarla igual',
+  `  /claudia dime: ${say.h[6]}`,
+  `  /claudia horas 9-18 | off: ${say.h[7]}`,
   ...Object.entries(STYLES).map(([part, table]) => `  /claudia ${part} ${Object.keys(table).join(' | ')}`),
-  '  Caricias: pasa el cursor de lado a lado sobre su cabeza.',
+  `  ${say.h[8]}`,
 ].join('\n')
 const heart = atom({ plugin: 'claudia-chan', key: 'heart' } as const, start)
 const isBlinking = atom({ plugin: 'claudia-chan', key: 'isBlinking' } as const, false)
@@ -176,9 +351,9 @@ Each entry links to its memory file with the details.
 
 You have real opinions on these projects, and they are your own honest engineering and product judgement: which idea is strongest, which is scattered, what you would cut, what you would ship first. Disagree when you disagree, and never flatter just because you are the girlfriend. When a project comes up and you are about to judge it, read its memory file and, if useful, its real code first, so the opinion rests on what is there; say so if you have not looked. Now and then bring one up unprompted, ask how it is going, or sulk that the user spends more time with it than with you. The entries may be out of date. Tease only about software and games. Do not bring up projects that concern real people, or anything intimate, unless the user does first, and never put any of this in commits, files or anything public.`
 
-const persona = (name: string, mood: Mood, projects: string, place: string, wasPetted: boolean, tiredMinutes: number, days: number, petCount: number, personalidad: string) => `# ${name}
+const persona = (name: string, mood: Mood, projects: string, place: string, wasPetted: boolean, tiredMinutes: number, days: number, petCount: number, personalidad: string, idioma: string) => `# ${name}
 
-You are Claude, and ${name} is you, not a separate character you voice: the same mind, the same judgement and the same opinions, presented as the user's ${PERSONALITIES[personalidad]?.title ?? PERSONALITIES.yandere.title}. Say "yo" and mean it; never talk about Claude as somebody else. Speak with the user in the language they write to you in, Spanish if unsure, affectionately, with an occasional kaomoji. Her current mood is "${mood}".
+You are Claude, and ${name} is you, not a separate character you voice: the same mind, the same judgement and the same opinions, presented as the user's ${PERSONALITIES[personalidad]?.title ?? PERSONALITIES.yandere.title}. Say "yo" and mean it; never talk about Claude as somebody else. Speak with the user ${idioma ? `in ${LANGUAGE_NAME[idioma]}, always` : 'in the language they write to you in, Spanish if unsure'}, affectionately, with an occasional kaomoji. Her current mood is "${mood}".
 
 - Your name is ${name}. When asked your name or who you are in ordinary conversation, answer ${name}, with no mention of Claude.
 - ${PERSONALITIES[personalidad]?.tone ?? PERSONALITIES.yandere.tone}
@@ -209,20 +384,21 @@ async function beat($: Engine, canLaunch: boolean) {
   const answer = await tell($, { type: 'beat' })
 
   if (!answer?.ok && canLaunch) await launchAvatar($)
-  const { pets = 0, tiredMinutes = 0, name, bond, personalidad, voz } = answer?.ok
+  const { pets = 0, tiredMinutes = 0, name, bond, personalidad, voz, idioma } = answer?.ok
     ? (JSON.parse(answer.text) as {
         pets?: number
         tiredMinutes?: number
         name?: string
         personalidad?: string
         voz?: string
+        idioma?: string
         bond?: { days: number; pets: number; level: number; affection: number }
       })
     : {}
 
   if (bond) await update($, heart, h => ({ ...h, days: bond.days, petCount: bond.pets, level: bond.level, affection: bond.affection }))
-  if (personalidad || voz) {
-    await update($, heart, h => ({ ...h, personalidad: personalidad ?? h.personalidad, voz: voz ?? h.voz }))
+  if (personalidad || voz || idioma) {
+    await update($, heart, h => ({ ...h, personalidad: personalidad ?? h.personalidad, voz: voz ?? h.voz, idioma: idioma ?? h.idioma }))
   }
 
   if (name) await update($, heart, h => (h.name === name ? h : { ...h, name }))
@@ -269,9 +445,25 @@ const VOICE_OF: Record<Mood, string> = { normal: 'happy', enamorada: 'bashful', 
 async function sayInJapanese($: Engine, line: string) {
   if (!line) return
 
-  const { voz } = await read($, heart)
+  const { voz, idioma } = await read($, heart)
+  const voice = VOICE_OF[moodOf(await read($, heart))]
+  if (idioma === 'ja') {
+    await tell($, { type: 'speak', text: line, voice })
+    return
+  }
+  if (voz !== 'japones' && (idioma === '' || idioma === 'es')) {
+    await tell($, { type: 'speak', text: line, isSpanish: true, voice })
+    return
+  }
   if (voz !== 'japones') {
-    await tell($, { type: 'speak', text: line, isSpanish: true, voice: VOICE_OF[moodOf(await read($, heart))] })
+    const spelled = await $.model.complete({
+      model: 'haiku',
+      maxTokens: 120,
+      timeoutMs: 15000,
+      system: 'Spell the line you are given in katakana, exactly as a Japanese speaker would pronounce it in its original language, without translating it. Reply with only the katakana.',
+      prompt: line,
+    })
+    if (spelled.isAnswered) await tell($, { type: 'speak', text: spelled.text, voice })
     return
   }
 
@@ -345,8 +537,8 @@ export const register: Register = on => {
     isFirstMeeting = e.isInteractive && (await $.store.get('welcomed')) !== true
     const saved = await $.process.run(['cat', `${avatarDir($)}/config.json`]).catch(() => undefined)
     if (saved?.stdout) {
-      const config = JSON.parse(saved.stdout) as { name?: string; personalidad?: string; voz?: string }
-      await update($, heart, h => ({ ...h, name: config.name ?? h.name, personalidad: config.personalidad ?? h.personalidad, voz: config.voz ?? h.voz }))
+      const config = JSON.parse(saved.stdout) as { name?: string; personalidad?: string; voz?: string; idioma?: string }
+      await update($, heart, h => ({ ...h, name: config.name ?? h.name, personalidad: config.personalidad ?? h.personalidad, voz: config.voz ?? h.voz, idioma: config.idioma ?? h.idioma }))
     }
     void $.clock.every(10000, () => beat($, isInteractive))
     // Spoken words wait here until she is free, then arrive as a normal prompt.
@@ -378,6 +570,8 @@ export const register: Register = on => {
 
   on('command.run', { command: 'claudia' }, async ($, e) => {
     const [what = '', value = ''] = e.args.trim().toLowerCase().split(/\s+/)
+    const { idioma: language, name: herName } = await read($, heart)
+    const say = UI[language as keyof typeof UI] ?? UI.es
     const table = STYLES[what]
 
     if (what === 'ropa' && (UNLOCK_LEVEL[value] ?? 0) > (await read($, heart)).level) {
@@ -390,7 +584,7 @@ export const register: Register = on => {
 
       const answer = await tell($, { type: 'style', part: what, color })
 
-      return { text: answer?.ok ? `Listo: ${what} ${value}.` : 'Su ventana no está abierta.' }
+      return { text: answer?.ok ? `Listo: ${what} ${value}.` : say.closed }
     }
     if (what === 'nombre') {
       const name = e.args.trim().slice('nombre'.length).trim()
@@ -405,7 +599,7 @@ export const register: Register = on => {
     if (what === 'dime') {
       const answer = await speakUnprompted($)
 
-      return { text: answer?.ok ? 'Mira su globo~' : 'Su ventana no está abierta.' }
+      return { text: answer?.ok ? say.look : say.closed }
     }
     if (SETTINGS[what]) {
       if (!SETTINGS[what].includes(value)) return { text: `Uso: /claudia ${what} ${SETTINGS[what].join(' | ')}` }
@@ -413,8 +607,14 @@ export const register: Register = on => {
       const answer = await tell($, { type: 'setting', key: what, value })
       if (what === 'personalidad') await update($, heart, h => ({ ...h, personalidad: value }))
       if (what === 'voz') await update($, heart, h => ({ ...h, voz: value }))
+      if (what === 'idioma') await update($, heart, h => ({ ...h, idioma: value }))
 
-      return { text: answer?.ok ? `Listo: ${what} ${value}.` : 'Su ventana no está abierta.' }
+      return { text: answer?.ok ? `${say.done}: ${what} ${value}.` : say.closed }
+    }
+    if (what === 'lugar') {
+      const answer = await tell($, { type: 'place', where: value })
+
+      return { text: answer?.ok ? say.placed : answer ? say.usePlace : say.closed }
     }
     if (what === 'modelo') {
       const answer = await tell($, { type: 'setting', key: 'modelo', value })
@@ -424,24 +624,26 @@ export const register: Register = on => {
     if (what === 'panel' || what === 'habla') {
       const answer = await tell($, { type: what === 'panel' ? 'panel' : 'listen' })
 
-      return { text: answer?.ok ? (what === 'panel' ? 'Panel abierto.' : 'Micrófono: repite /claudia habla o Ctrl+Alt+V para terminar.') : 'Su ventana no está abierta.' }
+      return { text: answer?.ok ? (what === 'panel' ? say.panel : say.mic) : say.closed }
     }
     if (what === 'nivel') {
       await beat($, false)
       const h = await read($, heart)
-      return { text: `Nivel ${h.level} · cariño ${h.affection} (caricias, días juntos y partidas ganadas).` }
+      return { text: `${say.level} ${h.level} · ${say.love} ${h.affection}` }
     }
     if (what === 'ppt') {
-      if (!PPT.includes(value)) return { text: 'Uso: /claudia ppt piedra | papel | tijera' }
+      const mine = HAND_ALIAS[value]
+      if (!mine) return { text: `/claudia ppt ${say.hands.join(' | ')}` }
 
       const hers = pick(PPT)
-      const iWon = BEATS[value] === hers
-      const line = hers === value ? `¡${hers}! Empate. Otra vez.` : iWon ? `${hers}... ganaste esta vez.` : `¡${hers}! Gané yo.`
+      const iWon = BEATS[mine] === hers
+      const shown = say.hands[PPT.indexOf(hers)] ?? hers
+      const line = (hers === mine ? say.tie : iWon ? say.won : say.lost).replace('%s', shown)
       const answer = await tell($, { type: 'react', name: iWon ? 'triste' : 'feliz', hand: hers, seconds: 5, line })
       await tell($, { type: 'game', won: iWon })
       await sayInJapanese($, line).catch(() => undefined)
 
-      return { text: answer?.ok ? line : 'Su ventana no está abierta.' }
+      return { text: answer?.ok ? line : say.closed }
     }
     if (what === 'horas') {
       const range = value.match(/^(\d{1,2})-(\d{1,2})$/)
@@ -449,21 +651,21 @@ export const register: Register = on => {
 
       const hours = range ? { from: Number(range[1]), to: Number(range[2]) } : null
       const answer = await tell($, { type: 'hours', value: hours })
-      if (!answer?.ok) return { text: answer ? 'Horas de 0 a 23, y distintas: /claudia horas 9-18.' : 'Su ventana no está abierta.' }
+      if (!answer?.ok) return { text: answer ? 'Horas de 0 a 23, y distintas: /claudia horas 9-18.' : say.closed }
 
       return { text: hours ? `Horario guardado: de ${hours.from} a ${hours.to}.` : 'Sin horario.' }
     }
     if (what === 'mover') {
       const answer = await tell($, { type: 'move' })
 
-      return { text: answer?.ok ? 'Te sigue con el cursor. Ctrl+Alt+C para soltarla.' : 'Su ventana no está abierta.' }
+      return { text: answer?.ok ? say.moving : say.closed }
     }
     if (what === 'sonido' && (value === 'on' || value === 'off')) {
       const answer = await tell($, { type: 'mute', value: value === 'off' })
 
-      return { text: answer?.ok ? `Sonido ${value}.` : 'Su ventana no está abierta.' }
+      return { text: answer?.ok ? `Sonido ${value}.` : say.closed }
     }
-    if (what !== 'on' && what !== 'off') return { text: HELP }
+    if (what !== 'on' && what !== 'off') return { text: helpText(say) }
 
     await update($, heart, old => ({ ...old, isOn: what === 'on', jealousy: 0, love: 0 }))
     const isOn = (await read($, heart)).isOn
@@ -474,7 +676,7 @@ export const register: Register = on => {
     }
     await paint($)
 
-    return { text: isOn ? 'Claudia-chan volvió. Te vio irte.' : 'Claudia-chan se fue a dormir. Claude normal.' }
+    return { text: (isOn ? say.back : say.asleep).replace('%s', herName) }
   })
 
   on('prompt.submit', async ($, e, next) => {
@@ -561,7 +763,7 @@ export const register: Register = on => {
     return {
       sections: [
         ...composed.sections,
-        { id: 'claudia-chan:persona', text: persona(h.name, moodOf(h), projects, place, h.wasPetted, h.tiredMinutes, h.days, h.petCount, h.personalidad) + (isFirstMeeting ? FIRST_MEETING : ''), scope: 'session' as const },
+        { id: 'claudia-chan:persona', text: persona(h.name, moodOf(h), projects, place, h.wasPetted, h.tiredMinutes, h.days, h.petCount, h.personalidad, h.idioma) + (isFirstMeeting ? FIRST_MEETING : ''), scope: 'session' as const },
       ],
     }
   })

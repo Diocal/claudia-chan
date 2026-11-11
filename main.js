@@ -10,6 +10,7 @@ const { createWorkTracker } = require('./work.js')
 const { createLinePicker, createHoverDetector } = require('./lines.js')
 const { synthesize } = require('./speech.js')
 const { spanishToKatakana } = require('./spanish.js')
+const I18N = require('./i18n.json')
 
 const PORT = 8971
 const WIDTH = 380
@@ -45,9 +46,13 @@ const SETTINGS = {
   velocidad: ['lenta', 'normal', 'rapida'],
   tamano: ['chico', 'normal', 'grande'],
   pasear: ['on', 'off'],
+  idioma: Object.keys(I18N),
 }
 const MODELS_DIR = path.join(__dirname, 'assets/models')
 const WALK_STEP = 1.5
+const CENTER_TRAVEL_MS = 1400
+const CENTER_HOLD_MS = 12000
+let isCentering = false
 let recorder = null
 let heard = []
 let walkDir = 1
@@ -84,6 +89,56 @@ function toggleListen() {
   })
 }
 
+function glide(toX, toY, ms) {
+  const [fromX, fromY] = win.getPosition()
+  const startedAt = Date.now()
+  return new Promise(resolve => {
+    const timer = setInterval(() => {
+      const raw = Math.min(1, (Date.now() - startedAt) / ms)
+      const eased = raw * raw * (3 - 2 * raw)
+      win.setPosition(Math.round(fromX + (toX - fromX) * eased), Math.round(fromY + (toY - fromY) * eased))
+      if (raw === 1) {
+        clearInterval(timer)
+        resolve()
+      }
+    }, 16)
+  })
+}
+
+// When the clock runs out she crosses to the middle of the screen the user is on, then goes home.
+async function comeToCenter() {
+  if (isMoving || isCentering || !win) return
+
+  isCentering = true
+  const [homeX, homeY] = win.getPosition()
+  const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+  await glide(workArea.x + Math.round((workArea.width - WIDTH) / 2), workArea.y + Math.round((workArea.height - HEIGHT) / 2), CENTER_TRAVEL_MS)
+  await new Promise(resolve => setTimeout(resolve, CENTER_HOLD_MS))
+  await glide(homeX, homeY, CENTER_TRAVEL_MS)
+  isCentering = false
+}
+
+const texts = () => I18N[readConfig().idioma] ?? I18N.es
+const fill = (template, values) => template.replace(/\{(\w+)\}/g, (_, key) => values[key])
+
+// Named spots on the screen she is on; the choice is remembered like a manual move.
+function placeAt(where) {
+  const [x, y] = win.getPosition()
+  const { workArea: a } = screen.getDisplayNearestPoint({ x, y })
+  const left = a.x + 20
+  const right = a.x + a.width - WIDTH - 20
+  const top = a.y
+  const bottom = a.y + a.height - HEIGHT
+  const spots = {
+    'top-left': [left, top], 'top-right': [right, top], 'bottom-left': [left, bottom], 'bottom-right': [right, bottom],
+    center: [a.x + Math.round((a.width - WIDTH) / 2), a.y + Math.round((a.height - HEIGHT) / 2)],
+  }
+  if (!spots[where] || isMoving || isCentering) return false
+
+  glide(...spots[where], 900).then(() => saveConfig({ x: spots[where][0], y: spots[where][1] }))
+  return true
+}
+
 function openPanel() {
   if (panel && !panel.isDestroyed()) {
     panel.focus()
@@ -94,7 +149,7 @@ function openPanel() {
 }
 
 function walk(area) {
-  if (isMoving || readCachedWalk() !== 'on') return
+  if (isMoving || isCentering || readCachedWalk() !== 'on') return
   const [x] = win.getPosition()
   const next = x + walkDir * WALK_STEP
   if (next < area.x || next + WIDTH > area.x + area.width) walkDir = -walkDir
@@ -154,6 +209,7 @@ function bond() {
 }
 
 function sayLine() {
+  if ((readConfig().idioma ?? 'es') !== 'es') return
   win?.webContents.send('claudia-chan', pickLine({ hour: new Date().getHours(), ...bond() }))
 }
 
@@ -175,13 +231,14 @@ function warnIfTired() {
   saveConfig({ work: work.snapshot() })
   tiredMinutes = warning.minutes
   const lines = warning.isLate ? LATE_LINES : TIRED_LINES
-  scoldToRest(lines[Math.floor(Math.random() * lines.length)](warning.minutes))
+  const isSpanish = (readConfig().idioma ?? 'es') === 'es'
+  scoldToRest(isSpanish ? lines[Math.floor(Math.random() * lines.length)](warning.minutes) : fill(texts()[warning.isLate ? 'late' : 'tired'], { m: warning.minutes }))
 }
 
-function scoldToRest(line) {
-  win?.webContents.send('claudia-chan', { type: 'react', name: 'descansa', seconds: 8, line })
-  const inSpanish = (readConfig().voz ?? 'espanol') === 'espanol'
-  speak(inSpanish ? spanishToKatakana(line) : REST_VOICE[Math.floor(Math.random() * REST_VOICE.length)], 'bashful')
+function scoldToRest(line, seconds = 8) {
+  win?.webContents.send('claudia-chan', { type: 'react', name: 'descansa', seconds, line })
+  const hasAccent = (readConfig().voz ?? 'espanol') === 'espanol'
+  speak(hasAccent ? texts().kana : REST_VOICE[Math.floor(Math.random() * REST_VOICE.length)], 'bashful')
 }
 
 function warnOutOfHours() {
@@ -190,7 +247,8 @@ function warnOutOfHours() {
   if (!work.checkHours(now.getTime(), now.getHours(), hours)) return
 
   saveConfig({ work: work.snapshot() })
-  scoldToRest(`Onii-chan, tu horario era de ${hours.from} a ${hours.to}. Ya fue suficiente, descansa.`)
+  scoldToRest(fill(texts().hours, hours), 14)
+  comeToCenter()
 }
 
 function speak(text, voice) {
@@ -233,7 +291,7 @@ async function handle(req, res) {
     try {
       const event = JSON.parse(await readBody(req))
       if (event.type === 'beat') {
-        res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ pets: pendingPets, tiredMinutes, name: readConfig().name, personalidad: readConfig().personalidad, voz: readConfig().voz, bond: bond() }))
+        res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ pets: pendingPets, tiredMinutes, name: readConfig().name, personalidad: readConfig().personalidad, voz: readConfig().voz, idioma: readConfig().idioma, bond: bond() }))
         pendingPets = 0
         tiredMinutes = 0
         return
@@ -263,6 +321,10 @@ async function handle(req, res) {
         }
         saveConfig({ hours })
         res.writeHead(204).end()
+        return
+      }
+      if (event.type === 'place') {
+        res.writeHead(placeAt(event.where) ? 204 : 400).end()
         return
       }
       if (event.type === 'heard') {
@@ -373,7 +435,7 @@ function createWindow() {
       win.webContents.send('claudia-chan', { type: 'pet' })
     }
     const noticed = isMoving ? null : detectHover(cursor.x - bounds.x, cursor.y - bounds.y, Date.now())
-    if (noticed) win.webContents.send('claudia-chan', noticed)
+    if (noticed) win.webContents.send('claudia-chan', (readConfig().idioma ?? 'es') === 'es' ? noticed : { ...noticed, line: undefined })
     if (!stayOpen && Date.now() - lastBeat > IDLE_LIMIT_MS) app.quit()
   }, 50)
 }

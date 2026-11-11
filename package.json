@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "main": "main.js",
-  "scripts": { "start": "electron ." },
+  "scripts": {
+    "start": "electron ."
+  },
   "dependencies": {
     "@pixiv/three-vrm": "3.5.5",
+    "@pixiv/three-vrm-animation": "3.5.5",
     "three": "0.187.0"
   },
   "devDependencies": {
