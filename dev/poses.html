@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <style>
   html { background: #c9b8d8 !important; }
+  body.full canvas { -webkit-mask-image: none; }
   html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
   /* She fades out at the waist instead of being sliced by the window edge. */
   canvas {
@@ -68,8 +69,9 @@
   const wait = setInterval(() => {
     if (!window.claudiaReady) return
     clearInterval(wait)
+    if (q.get('body')) emit({ type: 'body', mode: q.get('body') })
     if (q.get('mood')) emit({ mood: q.get('mood') })
-    if (q.get('act')) emit({ type: 'doing', name: q.get('act') })
+    if (q.get('act')) emit({ type: 'doing', name: q.get('act'), dir: Number(q.get('dir') ?? 1) })
     setTimeout(() => { document.title = 'ready' }, Number(q.get('settle') ?? 1500))
   }, 50)
 </script>

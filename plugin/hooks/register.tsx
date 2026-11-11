@@ -279,6 +279,7 @@ const helpText = (say: (typeof UI)[keyof typeof UI]) => [
   '  /claudia modelo <...>',
   `  /claudia lugar top-left | top-right | bottom-left | bottom-right | center: ${say.h[4]}`,
   `  /claudia mover (Ctrl+Alt+C): ${say.h[5]}`,
+  '  /claudia baila: 💃',
   ...Object.entries(SETTINGS).map(([key, list]) => `  /claudia ${key} ${list.join(' | ')}`),
   `  /claudia dime: ${say.h[6]}`,
   `  /claudia horas 9-18 | off: ${say.h[7]}`,
@@ -683,6 +684,10 @@ export const register: Register = on => {
       const answer = await tell($, { type: 'setting', key: 'modelo', value })
 
       return { text: answer?.ok ? `Modelo: ${value}.` : 'No existe ese modelo. Pon el .vrm en ~/claudia-chan/assets/models.' }
+    }
+    if (what === 'baila') {
+      const answer = await tell($, { type: 'dance' })
+      return { text: answer?.ok ? '💃 ♪(๑ᴖ◡ᴖ๑)♪' : say.closed }
     }
     if (what === 'panel' || what === 'habla') {
       const answer = await tell($, { type: what === 'panel' ? 'panel' : 'listen' })

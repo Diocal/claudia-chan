@@ -9,6 +9,8 @@
     position: fixed; inset: 0;
     -webkit-mask-image: linear-gradient(#000 80%, transparent 99%);
   }
+  /* Whole body on screen: no fade, her feet are part of the picture. */
+  body.full canvas { -webkit-mask-image: none; }
   #bubble {
     position: fixed; top: 10px; left: 20px; right: 20px; padding: 10px 14px;
     background: #fff; color: #2a2030; border-radius: 16px;

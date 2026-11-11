@@ -53,13 +53,11 @@ const SETTINGS = {
   idioma: Object.keys(I18N),
 }
 const MODELS_DIR = path.join(__dirname, 'assets/models')
-const WALK_STEP = 1.5
 const CENTER_TRAVEL_MS = 1400
 const CENTER_HOLD_MS = 12000
 let isCentering = false
 let recorder = null
 let heard = []
-let walkDir = 1
 let panel = null
 
 function modelNames() {
@@ -168,6 +166,7 @@ function refreshTray() {
     { label: shown ? 'Ocultar (Ctrl+Alt+H)' : 'Mostrar (Ctrl+Alt+H)', click: toggleVisible },
     { label: 'Hablarle (Ctrl+Alt+V)', click: toggleListen },
     { label: 'Moverla (Ctrl+Alt+C)', click: toggleMove },
+    { label: 'Bailar 💃', click: () => dance() },
     { label: 'Panel de ajustes', click: openPanel },
     { type: 'separator' },
     { label: 'Cerrar Claudia-chan', click: dismiss },
@@ -189,18 +188,152 @@ function openPanel() {
   panel.loadURL(`http://127.0.0.1:${PORT}/panel.html`)
 }
 
-function walk(area) {
-  if (isMoving || isCentering || readCachedWalk() !== 'on') return
-  const [x] = win.getPosition()
-  const next = x + walkDir * WALK_STEP
-  if (next < area.x || next + WIDTH > area.x + area.width) walkDir = -walkDir
-  win.setPosition(Math.round(Math.max(area.x, Math.min(next, area.x + area.width - WIDTH))), area.y + area.height - HEIGHT)
-  win.webContents.send('claudia-chan', { type: 'walk', dir: walkDir })
+// --- Her own life on the desktop: strolling along the bottom of the screen, sitting on top of the
+// window you are using, and going back to her spot to work alongside Claude.
+const SEAT_Y = 410 // where her seat is, in window pixels, in the full-body view (measured on the models)
+const WALK_SPEED = 2.6 // px per 50 ms tick
+const BUSY_MS = 8000 // a work event keeps her at her spot this long
+const canSeeWindows = process.platform === 'linux' && process.env.XDG_SESSION_TYPE !== 'wayland'
+let life = { mode: 'stand', until: Date.now() + 20000 }
+let lastWork = 0
+let activeWin = null // the focused window (X11 only): { id, x, y, width, height }
+
+function pollActiveWindow() {
+  if (!canSeeWindows) return
+  execFile('xdotool', ['getactivewindow', 'getwindowgeometry', '--shell'], { timeout: 1000 }, (error, stdout) => {
+    if (error) {
+      activeWin = null
+      return
+    }
+    const v = Object.fromEntries(stdout.trim().split('\n').map(line => line.split('=')).map(([k, n]) => [k, Number(n)]))
+    activeWin = { id: v.WINDOW, x: v.X, y: v.Y, width: v.WIDTH, height: v.HEIGHT }
+  })
+}
+
+const show = event => { if (alive()) win.webContents.send('claudia-chan', event) }
+const bottomOf = area => area.y + area.height - HEIGHT
+const randomBetween = (a, b) => a + Math.random() * (b - a)
+
+// Where she would sit on the active window, or null when there is no good spot (fullscreen, too high).
+function perchSpot() {
+  if (!activeWin) return null
+  const area = screen.getDisplayNearestPoint({ x: activeWin.x + activeWin.width / 2, y: activeWin.y }).workArea
+  const top = activeWin.y - SEAT_Y
+  if (activeWin.width < 420 || activeWin.height > area.height - 40 || top < area.y - 60) return null
+  const x = Math.round(activeWin.x + activeWin.width * randomBetween(0.55, 0.85) - WIDTH / 2)
+  return { x: Math.max(area.x, Math.min(x, area.x + area.width - WIDTH)), y: top, id: activeWin.id, dx: x - activeWin.x }
+}
+
+function walkTo(x, y, then) {
+  const [fromX] = win.getPosition()
+  life = { mode: 'walk', to: { x, y }, then }
+  show({ type: 'body', mode: 'full' })
+  show({ type: 'doing', name: 'walk', dir: x >= fromX ? 1 : -1 })
+}
+
+async function hop(x, y) {
+  life = { mode: 'hop' }
+  show({ type: 'body', mode: 'full' })
+  show({ type: 'doing', name: 'celebrate', seconds: 0.8 })
+  await glide(x, y, 700)
+}
+
+function standAt(area, seconds) {
+  life = { mode: 'stand', until: Date.now() + seconds * 1000 }
+  show({ type: 'body', mode: 'bust' })
+  show({ type: 'doing', name: 'idle' })
+}
+
+async function arrive(area) {
+  const { then } = life
+  if (then?.perch) {
+    await hop(then.perch.x, then.perch.y)
+    life = { mode: 'perch', id: then.perch.id, dx: then.perch.dx, until: Date.now() + randomBetween(40, 120) * 1000 }
+    show({ type: 'doing', name: 'sit' })
+    return
+  }
+  standAt(area, randomBetween(20, 45))
+}
+
+// A little dance in the full-body view: asked for (/claudia baila, the tray) or on her own when bored.
+function dance(seconds = 10) {
+  life = { mode: 'dance', until: Date.now() + seconds * 1000 }
+  show({ type: 'body', mode: 'full' })
+  show({ type: 'doing', name: 'dance', dir: Math.floor(Math.random() * 3), seconds })
+}
+
+// Work started: she goes back to her spot, waist-up, to type along.
+async function goToWork(area) {
+  const home = savedPosition(area)
+  life = { mode: 'work' }
+  show({ type: 'body', mode: 'bust' })
+  const [x, y] = win.getPosition()
+  if (Math.abs(x - home.x) + Math.abs(y - home.y) > 4) await glide(home.x, home.y, 600)
+}
+
+function live(area) {
+  if (isMoving || isCentering || life.mode === 'hop') return
+  const now = Date.now()
+  // A dance ends even with strolling off.
+  if (life.mode === 'dance' && now >= life.until) {
+    standAt(area, randomBetween(15, 30))
+    return
+  }
+  if (readCachedWalk() !== 'on') return
+  const [x, y] = win.getPosition()
+  if (now - lastWork < BUSY_MS) {
+    if (life.mode !== 'work') void goToWork(area)
+    return
+  }
+  if (life.mode === 'work') {
+    standAt(area, randomBetween(15, 30))
+    return
+  }
+  if (life.mode === 'dance') {
+    if (now >= life.until) standAt(area, randomBetween(15, 30))
+    return
+  }
+  if (life.mode === 'walk') {
+    const dx = life.to.x - x
+    const dy = life.to.y - y
+    const distance = Math.hypot(dx, dy)
+    if (distance <= WALK_SPEED) {
+      win.setPosition(life.to.x, life.to.y)
+      void arrive(area)
+      return
+    }
+    win.setPosition(Math.round(x + (dx / distance) * WALK_SPEED), Math.round(y + (dy / distance) * WALK_SPEED))
+    return
+  }
+  if (life.mode === 'perch') {
+    // Stay with the window if you move it; hop down when it goes away or she gets bored.
+    if (activeWin?.id === life.id) {
+      const want = { x: activeWin.x + life.dx, y: activeWin.y - SEAT_Y }
+      if (Math.abs(want.x - x) + Math.abs(want.y - y) > 2) win.setPosition(Math.round(want.x), Math.round(want.y))
+    }
+    if (now < life.until) return
+    const ground = screen.getDisplayNearestPoint({ x, y }).workArea
+    void hop(x, bottomOf(ground)).then(() => standAt(ground, randomBetween(15, 30)))
+    return
+  }
+  if (now < life.until) return
+  const spot = Math.random() < 0.5 ? perchSpot() : null
+  if (spot) {
+    const ground = screen.getDisplayNearestPoint({ x: spot.x, y: spot.y + SEAT_Y }).workArea
+    walkTo(spot.x, bottomOf(ground), { perch: spot })
+    return
+  }
+  if (Math.random() < 0.15) {
+    dance(randomBetween(6, 12))
+    return
+  }
+  if (Math.random() < 0.75) walkTo(Math.round(randomBetween(area.x, area.x + area.width - WIDTH)), bottomOf(area))
+  else standAt(area, randomBetween(20, 40))
 }
 
 let cachedWalk = null
 function readCachedWalk() {
-  cachedWalk ??= readConfig().pasear ?? 'off'
+  cachedWalk ??= readConfig().pasear ?? 'on'
   return cachedWalk
 }
 
@@ -338,6 +471,8 @@ async function handle(req, res) {
         tiredMinutes = 0
         return
       }
+      // Claude is working: she goes back to her spot to work along.
+      if (event.type === 'doing' && ['typing', 'reading', 'nervous', 'facepalm'].includes(event.name)) lastWork = Date.now()
       if (event.type === 'activity') {
         work.activity(Date.now())
         saveConfig({ work: work.snapshot() })
@@ -371,6 +506,11 @@ async function handle(req, res) {
       }
       if (event.type === 'heard') {
         res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ text: heard.shift() ?? '' }))
+        return
+      }
+      if (event.type === 'dance') {
+        dance()
+        res.writeHead(204).end()
         return
       }
       if (event.type === 'listen') {
@@ -469,13 +609,15 @@ function createWindow() {
   openAvatar(area)
   setInterval(warnIfTired, 30000)
   setInterval(warnOutOfHours, 30000)
+  setInterval(pollActiveWindow, 1000)
   if (!readConfig().firstSeen) saveConfig({ firstSeen: Date.now() })
 
   setInterval(() => {
     if (!alive()) return
     const cursor = screen.getCursorScreenPoint()
     if (isMoving) win.setPosition(cursor.x - Math.round(WIDTH / 2), cursor.y - 120)
-    walk(area)
+    const [hereX, hereY] = win.getPosition()
+    live(screen.getDisplayNearestPoint({ x: hereX + WIDTH / 2, y: hereY + HEIGHT / 2 }).workArea)
     const bounds = win.getBounds()
     win.webContents.send('claudia-chan', {
       type: 'cursor',

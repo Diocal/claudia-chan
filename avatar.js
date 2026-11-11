@@ -93,6 +93,7 @@ let shownShape
 // What she is doing (activities.js); `activityUntil` sends a timed one back to idle.
 let activity = 'idle'
 let activityUntil = 0
+let activityArg
 let lastBusy = 0
 const bodyPose = Object.fromEntries(Object.entries(REST).map(([bone, r]) => [bone, [...r]]))
 const props = makeProps()
@@ -100,6 +101,12 @@ props.laptop.visible = false
 props.phone.visible = false
 scene.add(props.laptop)
 let bounce = 0
+// 'bust' frames her from the waist up; 'full' pulls back to show all of her (walking, sitting on a window).
+let bodyMode = 'bust'
+let lookY = 1.37
+let facing = 0
+// rotateVRM0 already turned older models around; turning adds to that.
+let baseYaw = 0
 
 // Skin keeps its texture; the others start from a neutral copy so that a dark
 // texture can still become blonde or pink.
@@ -215,6 +222,7 @@ new GLTFLoader()
     VRMUtils.removeUnnecessaryVertices(gltf.scene)
     VRMUtils.combineSkeletons(gltf.scene)
     VRMUtils.rotateVRM0(vrm)
+    baseYaw = vrm.scene.rotation.y
     scene.add(vrm.scene)
     vrm.lookAt.target = gaze
     pose('leftUpperArm', 0, 0, -1.2)
@@ -277,9 +285,15 @@ window.claudiaChan.onEvent(event => {
     setMuted(event.value)
     return
   }
+  if (event.type === 'body') {
+    bodyMode = event.mode === 'full' ? 'full' : 'bust'
+    document.body.classList.toggle('full', bodyMode === 'full')
+    return
+  }
   if (event.type === 'doing') {
     if (ACTIVITIES[event.name]) {
       activity = event.name
+      activityArg = event.dir
       // Untimed work still ends: if nothing new arrives in 90 s the session probably went away.
       activityUntil = clock.elapsedTime + (event.seconds ?? (event.name === 'idle' ? 0 : 90))
       if (event.name === 'idle') activityUntil = 0
@@ -336,8 +350,11 @@ renderer.setAnimationLoop(() => {
   const setting = MOODS[mood]
 
   key.color.lerp(new THREE.Color(setting.light), 0.08)
-  camera.position.z = THREE.MathUtils.damp(camera.position.z, baseCamera.z - setting.zoom * 1.1, 3, dt)
-  camera.position.y = THREE.MathUtils.damp(camera.position.y, baseCamera.y + setting.zoom * 0.22, 3, dt)
+  const isFull = bodyMode === 'full'
+  camera.position.z = THREE.MathUtils.damp(camera.position.z, isFull ? 4.3 : baseCamera.z - setting.zoom * 1.1, 3, dt)
+  camera.position.y = THREE.MathUtils.damp(camera.position.y, isFull ? 0.84 : baseCamera.y + setting.zoom * 0.22, 3, dt)
+  lookY = THREE.MathUtils.damp(lookY, isFull ? 0.82 : 1.37, 3, dt)
+  camera.lookAt(0, lookY, 0)
   // Only the promo renderer sets this, to frame shots from other angles.
   window.claudiaCameraHook?.(camera, vrm)
 
@@ -355,17 +372,21 @@ renderer.setAnimationLoop(() => {
     }
     // Jealous and with nothing to do, she stands there with her arms crossed.
     const shown = activity === 'idle' && (mood === 'celosa' || mood === 'yandere') ? 'pout' : activity
-    const goal = ACTIVITIES[shown](t)
+    const goal = ACTIVITIES[shown](t, activityArg)
     for (const bone of Object.keys(REST)) {
       const target = goal[bone] ?? REST[bone]
-      for (let i = 0; i < 3; i++) bodyPose[bone][i] = THREE.MathUtils.damp(bodyPose[bone][i], target[i], 7, dt)
+      // Dances follow the beat closely; everything else eases in.
+      for (let i = 0; i < 3; i++) bodyPose[bone][i] = THREE.MathUtils.damp(bodyPose[bone][i], target[i], goal.snappy ? 16 : 7, dt)
     }
     bounce = THREE.MathUtils.damp(bounce, goal.bounce ?? 0, 12, dt)
     vrm.scene.position.y = bounce
+    // She turns toward where she is walking, and back to face you when she stops.
+    facing = THREE.MathUtils.damp(facing, goal.turn ?? 0, goal.snappy ? 14 : 6, dt)
+    vrm.scene.rotation.y = baseYaw + facing
     props.laptop.visible = Boolean(goal.laptop)
     props.phone.visible = Boolean(goal.phone)
     if (goal.laptop) props.drawScreen(t)
-    for (const bone of ['leftUpperArm', 'leftLowerArm', 'leftHand', 'rightHand', 'neck']) pose(bone, ...bodyPose[bone])
+    for (const bone of ['leftUpperArm', 'leftLowerArm', 'leftHand', 'rightHand', 'neck', 'leftUpperLeg', 'rightUpperLeg', 'leftLowerLeg', 'rightLowerLeg']) pose(bone, ...bodyPose[bone])
     const [sx, sy, sz] = bodyPose.spine
     pose('spine', sx, sy + Math.sin(t * 0.5) * 0.02, sz + Math.sin(t * 0.7) * 0.012)
     const nuzzle = petTime > 0 ? Math.sin(t * 7) * 0.09 : 0
