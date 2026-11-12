@@ -491,12 +491,14 @@ async function sayInJapanese($: Engine, line: string) {
 
 // The memory of sessions started in the home folder, e.g. ~/.claude/projects/-Users-me/memory.
 async function loadProjects($: Engine) {
-  const home = (await $.env.get('HOME')) ?? ''
+  const home = ((await $.env.get('HOME')) ?? (await $.env.get('USERPROFILE')) ?? '').replace(/\\/g, '/')
   const memory = `${home}/.claude/projects/${home.replace(/[^a-zA-Z0-9]/g, '-')}/memory`
-  const found = await $.process.run(['grep', '-E', '^- \\[.*\\]\\(project_', `${memory}/MEMORY.md`]).catch(() => undefined)
+  // Read in JS (no grep), so it works on Windows too.
+  const index = await $.fs.read(`${memory}/MEMORY.md`).catch(() => '')
 
-  return (found?.stdout ?? '')
+  return index
     .split('\n')
+    .filter((line: string) => /^- \[.*\]\(project_/.test(line))
     .map((line: string) => line.slice(0, 190).replace('](', `](${memory}/`))
     .join('\n')
     .trim()
@@ -544,10 +546,18 @@ ${anniversary ? `- ${anniversary}\n` : ''}- You are jealous by nature: often, no
 // Tools that look rather than write: she reads along instead of typing.
 const READING_TOOLS = new Set(['Read', 'Grep', 'Glob', 'WebFetch', 'WebSearch', 'LSP', 'Agent', 'ToolSearch'])
 
-async function isDismissed($: Engine) {
-  const saved = await $.process.run(['cat', `${avatarDir($)}/config.json`]).catch(() => undefined)
+// The avatar's config.json, read in JS (no cat), so it works on Windows too.
+async function readAvatarConfig($: Engine): Promise<Record<string, unknown>> {
   try {
-    return (JSON.parse(saved?.stdout ?? '{}') as { dismissed?: boolean }).dismissed === true
+    return JSON.parse(await $.fs.read(`${avatarDir($)}/config.json`)) as Record<string, unknown>
+  } catch {
+    return {}
+  }
+}
+
+async function isDismissed($: Engine) {
+  try {
+    return (await readAvatarConfig($)).dismissed === true
   } catch {
     return false
   }
@@ -556,11 +566,20 @@ async function isDismissed($: Engine) {
 // `wake`: the person asked for her (new session, /claudia on), which overrides a "Cerrar".
 // A heartbeat relaunch does not pass it, so a closed Claudia stays closed.
 async function launchAvatar($: Engine, wake = false) {
+  const dir = avatarDir($)
+  // Windows (a drive letter in the path): PowerShell starts electron.exe detached.
+  if (/^[A-Za-z]:[\\/]/.test(dir)) {
+    const args = `'.','--no-sandbox'${wake ? ",'--wake'" : ''}`
+    await $.process
+      .run(['powershell', '-NoProfile', '-Command', `Start-Process -FilePath '${dir}/node_modules/electron/dist/electron.exe' -ArgumentList ${args} -WorkingDirectory '${dir}'`])
+      .catch(() => undefined)
+    return
+  }
   await $.process
     .run([
       'sh',
       '-c',
-      `cd "${avatarDir($)}" && $(command -v setsid) nohup "node_modules/electron/dist/$(cat node_modules/electron/path.txt)" . --no-sandbox${wake ? ' --wake' : ''} >/dev/null 2>&1 &`,
+      `cd "${dir}" && $(command -v setsid) nohup "node_modules/electron/dist/$(cat node_modules/electron/path.txt)" . --no-sandbox${wake ? ' --wake' : ''} >/dev/null 2>&1 &`,
     ])
     .catch(() => undefined)
 }
@@ -605,9 +624,8 @@ export const register: Register = on => {
     isInteractive = e.isInteractive
     if ((await $.store.get('asleep')) === true) await update($, heart, old => ({ ...old, isOn: false }))
     isFirstMeeting = e.isInteractive && (await $.store.get('welcomed')) !== true
-    const saved = await $.process.run(['cat', `${avatarDir($)}/config.json`]).catch(() => undefined)
-    if (saved?.stdout) {
-      const config = JSON.parse(saved.stdout) as { name?: string; personalidad?: string; voz?: string; idioma?: string }
+    const config = (await readAvatarConfig($)) as { name?: string; personalidad?: string; voz?: string; idioma?: string }
+    if (Object.keys(config).length) {
       await update($, heart, h => ({ ...h, name: config.name ?? h.name, personalidad: config.personalidad ?? h.personalidad, voz: config.voz ?? h.voz, idioma: config.idioma ?? h.idioma }))
     }
     void $.clock.every(10000, () => beat($, isInteractive))

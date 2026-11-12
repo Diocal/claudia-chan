@@ -79,7 +79,7 @@ let whisper = null
 const whisperQueue = []
 function transcribe(file) {
   if (!whisper) {
-    whisper = spawn(path.join(__dirname, 'vendor/whisper/bin/python'), [path.join(__dirname, 'transcribe.py'), '--serve'], { stdio: ['pipe', 'pipe', 'ignore'] })
+    whisper = spawn(path.join(__dirname, 'vendor/whisper', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'), [path.join(__dirname, 'transcribe.py'), '--serve'], { stdio: ['pipe', 'pipe', 'ignore'] })
     let pending = ''
     whisper.stdout.on('data', chunk => {
       pending += chunk
@@ -103,6 +103,21 @@ function transcribe(file) {
   })
 }
 
+// Windows has no "default" input for ffmpeg: the first DirectShow microphone (or config.micWin).
+let foundMic = null
+function windowsMic() {
+  if (readConfig().micWin) return readConfig().micWin
+  if (foundMic) return foundMic
+  try {
+    execFileSync('ffmpeg', ['-hide_banner', '-list_devices', 'true', '-f', 'dshow', '-i', 'dummy'], { stdio: 'pipe' })
+  } catch (error) {
+    // ffmpeg lists the devices on stderr and exits with an error; that is the normal way.
+    const line = String(error.stderr).split('\n').find(l => /\(audio\)/.test(l))
+    foundMic = line?.match(/"([^"]+)"/)?.[1] ?? null
+  }
+  return foundMic
+}
+
 function toggleListen() {
   if (recorder) {
     recorder.kill('SIGINT')
@@ -110,7 +125,9 @@ function toggleListen() {
   }
   const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'claudia-mic-'))
   const file = path.join(folder, 'mic.wav')
-  const input = process.platform === 'darwin' ? ['-f', 'avfoundation', '-i', ':default'] : ['-f', 'pulse', '-i', 'default']
+  const input = process.platform === 'darwin' ? ['-f', 'avfoundation', '-i', ':default']
+    : process.platform === 'win32' ? ['-f', 'dshow', '-i', `audio=${windowsMic()}`]
+    : ['-f', 'pulse', '-i', 'default']
   const current = spawn('ffmpeg', ['-y', '-loglevel', 'error', ...input, '-ac', '1', '-ar', '16000', file], { stdio: 'ignore' })
   recorder = current
   const limit = setTimeout(() => current.kill('SIGINT'), MAX_LISTEN_MS)
@@ -239,13 +256,47 @@ const SEAT_Y = 410 // where her seat is, in window pixels, in the full-body view
 // three-quarters). config.walkPxPerS overrides both for another walk file.
 const walkPxPerS = () => readConfig().walkPxPerS ?? (fs.existsSync(path.join(__dirname, 'assets/animations/walk.fbx')) ? 145 : 170)
 const BUSY_MS = 8000 // a work event keeps her at her spot this long
-const canSeeWindows = process.platform === 'linux' && process.env.XDG_SESSION_TYPE !== 'wayland'
+const canSeeWindows = process.platform === 'win32' || (process.platform === 'linux' && process.env.XDG_SESSION_TYPE !== 'wayland')
 let life = { mode: 'stand', until: Date.now() + 20000 }
 let lastWork = 0
 let activeWin = null // the focused window (X11 only): { id, x, y, width, height }
 
+// Windows: one PowerShell kept open that answers each "?" with the focused window's id and rectangle.
+let winShell = null
+let winShellReply = null
+function windowsActiveWindow() {
+  if (!winShell) {
+    const script = `Add-Type @"
+using System; using System.Runtime.InteropServices;
+public class W { [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+[DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out R r);
+public struct R { public int L, T, Rt, B; } }
+"@
+while ($null -ne ($line = [Console]::In.ReadLine())) { $h = [W]::GetForegroundWindow(); $r = New-Object W+R; [void][W]::GetWindowRect($h, [ref]$r); [Console]::Out.WriteLine("$h $($r.L) $($r.T) $($r.Rt - $r.L) $($r.B - $r.T)"); [Console]::Out.Flush() }`
+    // The script goes in -EncodedCommand (UTF-16LE base64); stdin stays free for the "?" questions.
+    winShell = spawn('powershell', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], { stdio: ['pipe', 'pipe', 'ignore'], windowsHide: true })
+    let buffer = ''
+    winShell.stdout.on('data', chunk => {
+      buffer += chunk
+      const lines = buffer.split(/\r?\n/)
+      buffer = lines.pop()
+      for (const line of lines) {
+        const [id, x, y, width, height] = line.trim().split(/\s+/).map(Number)
+        if (Number.isFinite(height)) winShellReply = { id, x, y, width, height }
+      }
+    })
+    winShell.on('exit', () => { winShell = null })
+  }
+  winShell.stdin.write('?\n')
+  activeWin = winShellReply
+}
+
 function pollActiveWindow() {
   if (!canSeeWindows) return
+  if (process.platform === 'win32') {
+    windowsActiveWindow()
+    return
+  }
   execFile('xdotool', ['getactivewindow', 'getwindowgeometry', '--shell'], { timeout: 1000 }, (error, stdout) => {
     if (error) {
       activeWin = null
@@ -904,4 +955,5 @@ app.on('before-quit', () => { quitting = true })
 app.on('will-quit', () => {
   globalShortcut.unregisterAll()
   whisper?.kill()
+  winShell?.kill()
 })

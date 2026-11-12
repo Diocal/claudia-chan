@@ -7,7 +7,15 @@ Claude Code as an anime companion: a Claude Code plugin plus a floating 3D avata
     ./setup.sh
     claude-chan
 
-Needs Claude Code, Node, `uv`, `ffmpeg` and either an X11 desktop (Ubuntu/Debian) or macOS with Homebrew. On macOS, allow microphone access for your terminal the first time you talk to her. Windows is not supported yet.
+Needs Claude Code, Node, `uv`, `ffmpeg` and an X11 desktop (Ubuntu/Debian), macOS with Homebrew, or Windows. On macOS, allow microphone access for your terminal the first time you talk to her.
+
+On **Windows** (PowerShell):
+
+    winget install OpenJS.NodeJS.LTS astral-sh.uv Gyan.FFmpeg
+    powershell -ExecutionPolicy Bypass -File setup.ps1
+    claude-chan
+
+Windows uses Kokoro for her voice (the old Japanese voice is Linux/macOS only); set `micWin` in `config.json` if she picks the wrong microphone.
 
 `setup.sh` only writes inside this folder plus the `claude-chan` launcher in `~/.local/bin`. Plain `claude` keeps working as usual.
 
@@ -25,9 +33,9 @@ Needs Claude Code, Node, `uv`, `ffmpeg` and either an X11 desktop (Ubuntu/Debian
 - Optional: **ElevenLabs** (`/claudia voz elevenlabs`), the most expressive. Put your key in `~/.config/claudia-chan/elevenlabs.key` (or `ELEVENLABS_API_KEY`); it uses the voice "Unya" and falls back to Kokoro if the key is missing or the call fails.
 - Talk to her with Ctrl+Alt+V: Whisper transcribes on your machine and your Claude Code session answers, on your Claude subscription. While you chat she reads her whole reply aloud.
 
-## Coming soon
+## VR and mixed reality
 
-Claudia-chan in **VR and mixed reality**.
+Turn on "Verla en VR / realidad mixta" in the panel (Comportamiento) and open the link it shows in your headset's browser (Quest and other WebXR headsets, same WiFi). She stands in your room (passthrough) or in a soft room, at full size, with everything she does on the desktop; hold a controller trigger to talk. The link carries a key, the server is HTTPS with a self-signed certificate (accept it once) and it only serves the VR page. On this PC you can preview it at http://127.0.0.1:8971/vr.
 
 ## Layout
 

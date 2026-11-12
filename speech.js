@@ -37,7 +37,8 @@ async function synthesize(text, voice, { tono, velocidad } = {}) {
 
 // --- Natural voices: Kokoro (local, free, the default) and ElevenLabs (optional, needs a key).
 // Kokoro runs vendor/kokoro (setup.sh); ElevenLabs reads ELEVENLABS_API_KEY or ~/.config/claudia-chan/elevenlabs.key.
-const KOKORO_PYTHON = path.join(ROOT, 'kokoro/bin/python')
+// A venv's Python: Scripts\python.exe on Windows, bin/python elsewhere.
+const KOKORO_PYTHON = path.join(ROOT, 'kokoro', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python')
 // Spanish is read with the Latin American accent (seseo), not Castilian.
 const KOKORO_LANG = { es: 'es-419', en: 'en-us', pt: 'pt-br', ja: 'ja' }
 const KOKORO_SPEED = { lenta: 0.88, normal: 1.0, rapida: 1.15 }
