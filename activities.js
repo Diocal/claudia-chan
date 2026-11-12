@@ -4,6 +4,8 @@ import * as THREE from 'three'
 // Each one returns target rotations [x, y, z] per bone at time t; the avatar eases toward them.
 // Arms: upperArm z ±1.2 is "down", x < 0 brings the arm forward; lowerArm y bends the elbow.
 const s = Math.sin
+export const WALK_CADENCE = 5.0 // rad/s of the step cycle: 1.6 steps per second
+export const WALK_STRIDE = 0.28 // hip swing in radians: ~0.44 m per step
 
 export const REST = {
   leftUpperLeg: [0, 0, 0], rightUpperLeg: [0, 0, 0], leftLowerLeg: [0, 0, 0], rightLowerLeg: [0, 0, 0],
@@ -84,12 +86,14 @@ export const ACTIVITIES = {
   }),
   // Walking across the screen, runway style: one foot in front of the other, hips swaying and
   // turning with each step, shoulders answering them, arms loose, chin up. Turned three-quarters.
+  // Cadence and stride are tied to how fast main.js moves the window (WALK_PX_PER_S): 1.6 steps/s of
+  // ~0.44 m, seen three-quarters, is ~170 px/s in the full-body view. Change them together or she skates.
   walk: (t, dir = 1) => {
-    const p = t * 6.2
+    const p = t * WALK_CADENCE
     const swing = s(p)
     const lift = (phase) => Math.max(0, s(p + phase))
     return {
-      rightUpperLeg: [-0.42 * swing, 0, -0.07], leftUpperLeg: [0.42 * swing, 0, 0.07],
+      rightUpperLeg: [-WALK_STRIDE * swing, 0, -0.07], leftUpperLeg: [WALK_STRIDE * swing, 0, 0.07],
       rightLowerLeg: [0.1 + 0.85 * lift(-1.4), 0, 0], leftLowerLeg: [0.1 + 0.85 * lift(Math.PI - 1.4), 0, 0],
       rightFoot: [0.25 * s(p - 0.6), 0, 0], leftFoot: [-0.25 * s(p - 0.6), 0, 0],
       hips: [0, 0.16 * swing, 0.07 * swing], spine: [0.02, -0.1 * swing, -0.03 * swing], chest: [-0.03, -0.06 * swing, -0.03 * swing],

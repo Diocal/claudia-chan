@@ -193,7 +193,8 @@ function openPanel() {
 // --- Her own life on the desktop: strolling along the bottom of the screen, sitting on top of the
 // window you are using, and going back to her spot to work alongside Claude.
 const SEAT_Y = 410 // where her seat is, in window pixels, in the full-body view (measured on the models)
-const WALK_SPEED = 2.6 // px per 50 ms tick
+// Matches her steps (activities.js WALK_CADENCE/WALK_STRIDE) so her feet do not skate.
+const WALK_PX_PER_S = 170
 const BUSY_MS = 8000 // a work event keeps her at her spot this long
 const canSeeWindows = process.platform === 'linux' && process.env.XDG_SESSION_TYPE !== 'wayland'
 let life = { mode: 'stand', until: Date.now() + 20000 }
@@ -227,10 +228,25 @@ function perchSpot() {
 }
 
 function walkTo(x, y, then) {
-  const [fromX] = win.getPosition()
-  life = { mode: 'walk', to: { x, y }, then }
+  const [fromX, fromY] = win.getPosition()
+  life = { mode: 'walk', to: { x, y }, then, from: { x: fromX, y: fromY }, at: Date.now() }
   show({ type: 'body', mode: 'full' })
   show({ type: 'doing', name: 'walk', dir: x >= fromX ? 1 : -1 })
+}
+
+// Walking moves the window smoothly (every frame, by elapsed time) at the speed of her steps.
+function walkStep() {
+  if (!alive() || life.mode !== 'walk' || isMoving) return
+  const { from, to, at } = life
+  const total = Math.hypot(to.x - from.x, to.y - from.y)
+  const done = Math.min(total, ((Date.now() - at) / 1000) * WALK_PX_PER_S)
+  if (done >= total) {
+    win.setPosition(to.x, to.y)
+    void arrive(screen.getDisplayNearestPoint({ x: to.x + WIDTH / 2, y: to.y + HEIGHT / 2 }).workArea)
+    return
+  }
+  const k = total ? done / total : 1
+  win.setPosition(Math.round(from.x + (to.x - from.x) * k), Math.round(from.y + (to.y - from.y) * k))
 }
 
 async function hop(x, y) {
@@ -304,18 +320,7 @@ function live(area) {
     if (now >= life.until) standAt(area, randomBetween(15, 30))
     return
   }
-  if (life.mode === 'walk') {
-    const dx = life.to.x - x
-    const dy = life.to.y - y
-    const distance = Math.hypot(dx, dy)
-    if (distance <= WALK_SPEED) {
-      win.setPosition(life.to.x, life.to.y)
-      void arrive(area)
-      return
-    }
-    win.setPosition(Math.round(x + (dx / distance) * WALK_SPEED), Math.round(y + (dy / distance) * WALK_SPEED))
-    return
-  }
+  if (life.mode === 'walk') return // walkStep moves her, at 60 fps
   if (life.mode === 'perch') {
     // Stay with the window if you move it; hop down when it goes away or she gets bored.
     if (activeWin?.id === life.id) {
@@ -651,6 +656,7 @@ function createWindow() {
   setInterval(warnIfTired, 30000)
   setInterval(warnOutOfHours, 30000)
   setInterval(pollActiveWindow, 1000)
+  setInterval(walkStep, 16)
   if (!readConfig().firstSeen) saveConfig({ firstSeen: Date.now() })
 
   setInterval(() => {
