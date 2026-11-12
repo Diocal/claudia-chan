@@ -40,6 +40,8 @@ async function synthesize(text, voice, { tono, velocidad } = {}) {
 const KOKORO_PYTHON = path.join(ROOT, 'kokoro/bin/python')
 const KOKORO_LANG = { es: 'es', en: 'en-us', pt: 'pt-br', ja: 'ja' }
 const KOKORO_SPEED = { lenta: 0.88, normal: 1.0, rapida: 1.15 }
+// Kokoro's voices sound grown-up; raising the pitch (tempo kept) makes her a young girl. `tono` picks how much.
+const KOKORO_PITCH = { grave: 1.0, normal: 1.2, agudo: 1.32 }
 // Default voice per language (config vozKokoro overrides it): Dora reads Spanish most naturally.
 const KOKORO_VOICE = { es: 'ef_dora', en: 'af_heart', pt: 'pf_dora', ja: 'jf_nezumi' }
 const UNYA = 'OPMFuXBnkGNrWUx7xtZY' // ElevenLabs "Unya": sweet, high Japanese voice; speaks Spanish with an accent
@@ -70,7 +72,7 @@ function elevenLabsKey() {
   }
 }
 
-async function kokoro(text, { idioma = 'es', velocidad, vozKokoro } = {}) {
+async function kokoro(text, { idioma = 'es', velocidad, vozKokoro, tono } = {}) {
   const folder = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'claudia-kokoro-'))
   try {
     const output = path.join(folder, 'out.wav')
@@ -79,7 +81,14 @@ async function kokoro(text, { idioma = 'es', velocidad, vozKokoro } = {}) {
         { timeout: 60000 }, error => (error ? reject(error) : resolve()))
       child.stdin.end(text)
     })
-    return await fs.promises.readFile(output)
+    const pitch = KOKORO_PITCH[tono] ?? KOKORO_PITCH.normal
+    if (pitch === 1) return await fs.promises.readFile(output)
+    const younger = path.join(folder, 'young.wav')
+    await new Promise((resolve, reject) => {
+      execFile('ffmpeg', ['-v', 'error', '-y', '-i', output, '-af', `asetrate=24000*${pitch},aresample=24000,atempo=1/${pitch}`, younger],
+        { timeout: 15000 }, error => (error ? reject(error) : resolve()))
+    })
+    return await fs.promises.readFile(younger)
   } finally {
     await fs.promises.rm(folder, { recursive: true, force: true })
   }
