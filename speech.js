@@ -38,12 +38,14 @@ async function synthesize(text, voice, { tono, velocidad } = {}) {
 // --- Natural voices: Kokoro (local, free, the default) and ElevenLabs (optional, needs a key).
 // Kokoro runs vendor/kokoro (setup.sh); ElevenLabs reads ELEVENLABS_API_KEY or ~/.config/claudia-chan/elevenlabs.key.
 const KOKORO_PYTHON = path.join(ROOT, 'kokoro/bin/python')
-const KOKORO_LANG = { es: 'es', en: 'en-us', pt: 'pt-br', ja: 'ja' }
+// Spanish is read with the Latin American accent (seseo), not Castilian.
+const KOKORO_LANG = { es: 'es-419', en: 'en-us', pt: 'pt-br', ja: 'ja' }
 const KOKORO_SPEED = { lenta: 0.88, normal: 1.0, rapida: 1.15 }
-// Kokoro's voices sound grown-up; raising the pitch (tempo kept) makes her a young girl. `tono` picks how much.
-const KOKORO_PITCH = { grave: 1.0, normal: 1.2, agudo: 1.32 }
-// Default voice per language (config vozKokoro overrides it): Dora reads Spanish most naturally.
-const KOKORO_VOICE = { es: 'ef_dora', en: 'af_heart', pt: 'pf_dora', ja: 'jf_nezumi' }
+// `tono` nudges the pitch (tempo kept).
+const KOKORO_PITCH = { grave: 0.94, normal: 1.0, agudo: 1.12 }
+// Default voice per language (config vozKokoro overrides it): a young girl's voice; jf_tebukuro reads
+// Spanish clearly with a light Asian lilt.
+const KOKORO_VOICE = { es: 'jf_tebukuro', en: 'af_sky', pt: 'jf_tebukuro', ja: 'jf_tebukuro' }
 const UNYA = 'OPMFuXBnkGNrWUx7xtZY' // ElevenLabs "Unya": sweet, high Japanese voice; speaks Spanish with an accent
 const NATURAL_CHARS = 480
 
