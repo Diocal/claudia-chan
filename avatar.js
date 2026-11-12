@@ -364,7 +364,6 @@ renderer.setAnimationLoop(() => {
   if (vrm) {
     setExpressions(dt)
     const breath = Math.sin(t * 1.6)
-    pose('chest', breath * 0.015, 0, 0)
     // Timed activities end; a long idle turns into a stretch, the phone, or sleep at night.
     if (activityUntil && t > activityUntil) { activity = 'idle'; activityUntil = 0 }
     if (activity === 'idle' && t - lastBusy > 45) {
@@ -397,7 +396,9 @@ renderer.setAnimationLoop(() => {
       reactionTime = 0.9
     }
     kissSent = Boolean(goal.kiss)
-    for (const bone of ['leftUpperArm', 'leftLowerArm', 'leftHand', 'rightHand', 'neck', 'leftUpperLeg', 'rightUpperLeg', 'leftLowerLeg', 'rightLowerLeg']) pose(bone, ...bodyPose[bone])
+    for (const bone of ['leftUpperArm', 'leftLowerArm', 'leftHand', 'rightHand', 'neck', 'leftUpperLeg', 'rightUpperLeg', 'leftLowerLeg', 'rightLowerLeg', 'leftFoot', 'rightFoot']) pose(bone, ...bodyPose[bone])
+    const [cx, cy, cz] = bodyPose.chest
+    pose('chest', cx + breath * 0.015, cy, cz)
     const [sx, sy, sz] = bodyPose.spine
     pose('spine', sx, sy + Math.sin(t * 0.5) * 0.02, sz + Math.sin(t * 0.7) * 0.012)
     const nuzzle = petTime > 0 ? Math.sin(t * 7) * 0.09 : 0
@@ -420,7 +421,7 @@ renderer.setAnimationLoop(() => {
       if (shape) for (const finger of FINGERS) curlFinger('right', finger, shape[finger])
       else relaxHands()
     }
-    pose('hips', 0, walking * 0.35, walking ? Math.sin(t * 8) * 0.025 : 0)
+    pose('hips', ...bodyPose.hips)
     if (reaction?.isSleepy && t > nextZ) {
       nextZ = t + 2.5
       spawnHearts('z')

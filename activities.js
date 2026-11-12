@@ -7,6 +7,7 @@ const s = Math.sin
 
 export const REST = {
   leftUpperLeg: [0, 0, 0], rightUpperLeg: [0, 0, 0], leftLowerLeg: [0, 0, 0], rightLowerLeg: [0, 0, 0],
+  leftFoot: [0, 0, 0], rightFoot: [0, 0, 0], hips: [0, 0, 0], chest: [0, 0, 0],
   leftUpperArm: [0, 0, -1.2], rightUpperArm: [0, 0, 1.2],
   leftLowerArm: [0, -0.2, 0], rightLowerArm: [0, 0.2, 0],
   leftHand: [0, 0, 0], rightHand: [0, 0, 0],
@@ -81,18 +82,22 @@ export const ACTIVITIES = {
   listening: t => ({
     head: [0.06 + Math.max(0, s(t * 2.2)) * 0.08, 0, 0.1], spine: [0.08, 0, 0],
   }),
-  // Walking across the screen: legs and arms in step, turned three-quarters toward where she goes.
+  // Walking across the screen, runway style: one foot in front of the other, hips swaying and
+  // turning with each step, shoulders answering them, arms loose, chin up. Turned three-quarters.
   walk: (t, dir = 1) => {
-    const p = t * 7.5
+    const p = t * 6.2
     const swing = s(p)
+    const lift = (phase) => Math.max(0, s(p + phase))
     return {
-      rightUpperLeg: [-0.45 * swing, 0, 0], leftUpperLeg: [0.45 * swing, 0, 0],
-      rightLowerLeg: [0.15 + 0.7 * Math.max(0, s(p - 1.6)), 0, 0], leftLowerLeg: [0.15 + 0.7 * Math.max(0, -s(p - 1.6)), 0, 0],
-      ...arms([0, -0.35 * swing, 1.22], [0, 0.35, 0]),
-      leftUpperArm: [0, -0.35 * swing, -1.22],
-      head: [0, -dir * 0.5, 0], spine: [0.04, 0, 0],
-      bounce: Math.abs(swing) * 0.025,
-      turn: dir * 1.1,
+      rightUpperLeg: [-0.42 * swing, 0, -0.07], leftUpperLeg: [0.42 * swing, 0, 0.07],
+      rightLowerLeg: [0.1 + 0.85 * lift(-1.4), 0, 0], leftLowerLeg: [0.1 + 0.85 * lift(Math.PI - 1.4), 0, 0],
+      rightFoot: [0.25 * s(p - 0.6), 0, 0], leftFoot: [-0.25 * s(p - 0.6), 0, 0],
+      hips: [0, 0.16 * swing, 0.07 * swing], spine: [0.02, -0.1 * swing, -0.03 * swing], chest: [-0.03, -0.06 * swing, -0.03 * swing],
+      ...arms([0, -0.28 * swing, 1.28], [0, 0.45, 0], [0, 0, 0.15]),
+      leftUpperArm: [0, -0.28 * swing, -1.28],
+      head: [-0.06, -dir * 0.45, 0.04 * swing],
+      bounce: (1 - Math.abs(swing)) * -0.012,
+      turn: dir * 1.05,
     }
   },
   // Sitting on the top edge of a window, legs dangling and kicking a little.
