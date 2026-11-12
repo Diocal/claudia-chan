@@ -10,6 +10,7 @@ export const WALK_STRIDE = 0.28 // hip swing in radians: ~0.44 m per step
 export const REST = {
   leftUpperLeg: [0, 0, 0], rightUpperLeg: [0, 0, 0], leftLowerLeg: [0, 0, 0], rightLowerLeg: [0, 0, 0],
   leftFoot: [0, 0, 0], rightFoot: [0, 0, 0], hips: [0, 0, 0], chest: [0, 0, 0],
+  leftShoulder: [0, 0, 0], rightShoulder: [0, 0, 0],
   leftUpperArm: [0, 0, -1.2], rightUpperArm: [0, 0, 1.2],
   leftLowerArm: [0, -0.2, 0], rightLowerArm: [0, 0.2, 0],
   leftHand: [0, 0, 0], rightHand: [0, 0, 0],

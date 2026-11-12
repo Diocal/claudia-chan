@@ -77,6 +77,12 @@ function applyLanguage(code) {
   for (const id of ['hint', 'move', 'mic']) document.getElementById(id).textContent = language[id]
 }
 let petTime = 0
+// Being petted: how long the current petting has lasted, and how much she leans into your hand (0..1).
+let petStreak = 0
+let lastPetAt = -10
+let petLean = 0
+let nextPetHeart = 0
+let blushLevel = 0
 let reaction = null
 let reactionTime = 0
 let headTilt = 0
@@ -98,6 +104,9 @@ props.laptop.visible = false
 props.phone.visible = false
 scene.add(props.laptop)
 let bounce = 0
+// Cheek patches (head-bone space), tuned on the bundled models.
+const BLUSH = { x: 0.042, y: 0.045, z: 0.085 }
+const blush = []
 let kissSent = false
 // Motion capture: assets/animations/<activity>[-n].fbx (Mixamo) replaces the hand-made pose for that activity.
 const mocap = {}
@@ -202,6 +211,19 @@ new GLTFLoader()
     pose('leftLowerArm', 0, -0.2, 0)
     pose('rightLowerArm', 0, 0.2, 0)
     relaxHands()
+    // Two soft pink patches on her cheeks, faded in when she blushes.
+    const head = vrm.humanoid.getRawBoneNode('head')
+    if (head) {
+      const back = vrm.meta.metaVersion === '0' ? -1 : 1
+      for (const side of [-1, 1]) {
+        const patch = new THREE.Mesh(new THREE.CircleGeometry(0.016, 24), new THREE.MeshBasicMaterial({ color: 0xff5f8f, transparent: true, opacity: 0, depthWrite: false }))
+        patch.scale.set(1.5, 0.75, 1)
+        patch.position.set(side * BLUSH.x, BLUSH.y, back * BLUSH.z)
+        if (back < 0) patch.rotation.y = Math.PI
+        head.add(patch)
+        blush.push(patch)
+      }
+    }
     const hand = vrm.humanoid.getRawBoneNode('rightHand')
     if (hand) {
       hand.add(props.phone)
@@ -221,10 +243,22 @@ window.claudiaChan.onEvent(event => {
     return
   }
   if (event.type === 'pet') {
-    petTime = 2.2
-    playSound('caricia')
-    spawnHearts()
-    say(language.pet[Math.floor(Math.random() * language.pet.length)])
+    // Rubbing keeps arriving every ~1.5 s while you keep petting her: one long caress, not a series.
+    const now = clock.elapsedTime
+    petStreak = now - lastPetAt < 4 ? petStreak + 1 : 1
+    lastPetAt = now
+    petTime = 2.6
+    if (petStreak === 1) {
+      playSound('caricia')
+      say(language.pet[Math.floor(Math.random() * language.pet.length)])
+    }
+    // A long caress melts her: a happy sigh, a burst of hearts, a kiss.
+    if (petStreak === 5) {
+      playSound('enamorada')
+      spawnHearts()
+      say(language.pet[Math.floor(Math.random() * language.pet.length)])
+      setTimeout(() => { activity = 'kiss'; activityStart = clock.elapsedTime; activityUntil = clock.elapsedTime + 1.8 }, 2600)
+    }
     document.getElementById('hint').classList.remove('on')
     return
   }
@@ -295,7 +329,8 @@ function setExpressions(dt) {
   petTime = Math.max(0, petTime - dt)
   reactionTime = Math.max(0, reactionTime - dt)
   if (reactionTime === 0) reaction = null
-  const target = petTime > 0 ? { happy: 1 } : (reaction?.expr ?? MOODS[mood].expr)
+  // Petted: eyes closed, content; just after, a shy little blush.
+  const target = petTime > 0 ? { happy: 1, relaxed: 0.3 } : (reaction?.expr ?? MOODS[mood].expr)
   const manager = vrm.expressionManager
   for (const name of EXPRESSION_NAMES) {
     if (name === 'blink' && target.blink === undefined) continue
@@ -379,18 +414,31 @@ renderer.setAnimationLoop(() => {
       mixer.update(dt)
       vrm.scene.position.y = 0
     } else {
-    for (const bone of ['leftUpperArm', 'leftLowerArm', 'leftHand', 'rightHand', 'neck', 'leftUpperLeg', 'rightUpperLeg', 'leftLowerLeg', 'rightLowerLeg', 'leftFoot', 'rightFoot']) pose(bone, ...bodyPose[bone])
+    for (const bone of ['leftUpperArm', 'leftLowerArm', 'leftHand', 'rightHand', 'neck', 'leftUpperLeg', 'rightUpperLeg', 'leftLowerLeg', 'rightLowerLeg', 'leftFoot', 'rightFoot', 'leftShoulder', 'rightShoulder']) pose(bone, ...bodyPose[bone])
     const [cx, cy, cz] = bodyPose.chest
     pose('chest', cx + breath * 0.015, cy, cz)
     const [sx, sy, sz] = bodyPose.spine
     pose('spine', sx, sy + Math.sin(t * 0.5) * 0.02, sz + Math.sin(t * 0.7) * 0.012)
-    const nuzzle = petTime > 0 ? Math.sin(t * 7) * 0.09 : 0
+    // Petting: she leans her head into your hand (toward the cursor), slowly nuzzles it, shoulders up.
+    petLean = THREE.MathUtils.damp(petLean, petTime > 0 ? 1 : 0, petTime > 0 ? 5 : 2.5, dt)
+    blushLevel = THREE.MathUtils.damp(blushLevel, petTime > 0 || t - lastPetAt < 5 || reaction?.isBlushing ? 1 : 0, 3, dt)
+    blush.forEach(b => { b.material.opacity = blushLevel * 0.55 })
+    if (petTime > 0 && t > nextPetHeart) {
+      nextPetHeart = t + 0.9
+      spawnHearts()
+    }
+    const handSide = THREE.MathUtils.clamp(gaze.position.x, -1, 1)
+    const nuzzle = petLean * (Math.sin(t * 2.4) * 0.05 - handSide * 0.18)
+    for (const [side, sign] of [['leftShoulder', 1], ['rightShoulder', -1]]) {
+      const [ox, oy, oz] = bodyPose[side]
+      pose(side, ox, oy, oz + sign * 0.12 * petLean)
+    }
     headTilt = THREE.MathUtils.damp(headTilt, reaction?.tilt ?? 0, 6, dt)
     headNod = THREE.MathUtils.damp(headNod, reaction?.nod ?? 0, 6, dt)
     const [hx, hy, hz] = bodyPose.head
     // While busy she looks at her work, not at the cursor.
-    const look = shown === 'idle' || shown === 'listening' ? 1 : 0.25
-    pose('head', ((gaze.position.y < 1.3 ? 0.05 : -0.03) + headNod) * look + hx, gaze.position.x * 0.12 * look + hy, nuzzle + headTilt + hz)
+    const look = (shown === 'idle' || shown === 'listening' ? 1 : 0.25) * (1 - petLean)
+    pose('head', ((gaze.position.y < 1.3 ? 0.05 : -0.03) + headNod) * look + hx + petLean * 0.1, gaze.position.x * 0.12 * look + hy, nuzzle + headTilt + hz)
     // Raised forearm, wagging: scolding, or showing her hand in a game.
     scold = THREE.MathUtils.damp(scold, reaction?.raisesArm ? 1 : 0, 7, dt)
     // The scolding arm (a reaction) wins over the activity's right arm.

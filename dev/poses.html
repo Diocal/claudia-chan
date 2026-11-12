@@ -71,6 +71,8 @@
     clearInterval(wait)
     if (q.get('body')) emit({ type: 'body', mode: q.get('body') })
     if (q.get('mood')) emit({ mood: q.get('mood') })
+    // ?pet=1: a long caress with the cursor a little to her right.
+    if (q.get('pet')) { emit({ type: 'cursor', x: 0.04, y: -0.02 }); setInterval(() => emit({ type: 'pet' }), 1200); emit({ type: 'pet' }) }
     if (q.get('act')) emit({ type: 'doing', name: q.get('act'), dir: Number(q.get('dir') ?? 1) })
     setTimeout(() => { document.title = 'ready' }, Number(q.get('settle') ?? 1500))
   }, 50)

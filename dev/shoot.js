@@ -11,9 +11,9 @@ app.whenReady().then(async () => {
   win.webContents.on('console-message', e => { if (e.level === 'error') console.log('page:', e.message) })
   win.webContents.setFrameRate(30)
   for (const shot of shots) {
-    const [act, mood = '', settleText = '', name = act, poseJson = '', body = ''] = shot.split('|')
+    const [act, mood = '', settleText = '', name = act, poseJson = '', body = '', extra = ''] = shot.split('|')
     const settle = settleText || '2200'
-    await win.loadURL(`http://127.0.0.1:8971/dev/poses.html?act=${act}&dir=${mood || 0}&mood=${mood}&settle=${settle}${poseJson ? '&pose=' + encodeURIComponent(poseJson) : ''}${body ? '&body=' + body : ''}`)
+    await win.loadURL(`http://127.0.0.1:8971/dev/poses.html?act=${act}&dir=${mood || 0}&mood=${mood}&settle=${settle}${poseJson ? '&pose=' + encodeURIComponent(poseJson) : ''}${body ? '&body=' + body : ''}${extra ? '&' + extra : ''}`)
     for (let i = 0; i < 80 && (await win.webContents.executeJavaScript('document.title')) !== 'ready'; i++) await new Promise(r => setTimeout(r, 100))
     const image = await win.webContents.capturePage()
     fs.writeFileSync(path.join(outDir, `${name}.png`), image.toPNG())
