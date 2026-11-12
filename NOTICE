@@ -1,0 +1,16 @@
+Claudia-chan
+Copyright 2026 Dio Calderon (github.com/Diocal) and the Claudia-chan contributors.
+
+Original project: https://github.com/Diocal/claudia-chan
+
+If you use, modify or redistribute Claudia-chan (or a work based on it), the Apache
+License 2.0 requires you to keep this NOTICE file with it. Please also credit the
+original project visibly, e.g. "Based on Claudia-chan by Dio Calderon".
+
+Third-party parts, under their own licenses:
+- VRM models vita, hairsample-female, darkness-shibu: CC0. VRM sample model: pixiv.
+- Kokoro-82M voice model (Apache-2.0), used through kokoro-onnx.
+- Open JTalk and the Mei voice from MMDAgent (Nagoya Institute of Technology, CC BY 3.0).
+- Whisper models (MIT) through faster-whisper.
+- Mixamo-to-VRM retargeting after the three-vrm example (MIT, pixiv).
+- Mixamo animations are not included; each user downloads their own under Adobe's terms.

@@ -128,3 +128,7 @@ The VR access is off by default. When on, it is HTTPS on port 8972, needs the ke
 - Voice: Kokoro-82M (Apache-2.0) via kokoro-onnx; Open JTalk with the Mei voice from MMDAgent (Nagoya Institute of Technology, CC BY).
 - Ears: Whisper via faster-whisper.
 - Motion capture retargeting after three-vrm's official Mixamo example (MIT); Mixamo animations are downloaded by each user.
+
+## License
+
+Apache License 2.0 (see `LICENSE`). You can use, modify and even sell it, but you must keep the `NOTICE` file, which credits the original project: *Claudia-chan by Dio Calderon*.
