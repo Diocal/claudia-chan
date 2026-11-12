@@ -40,6 +40,8 @@ async function synthesize(text, voice, { tono, velocidad } = {}) {
 const KOKORO_PYTHON = path.join(ROOT, 'kokoro/bin/python')
 const KOKORO_LANG = { es: 'es', en: 'en-us', pt: 'pt-br', ja: 'ja' }
 const KOKORO_SPEED = { lenta: 0.88, normal: 1.0, rapida: 1.15 }
+// Default voice per language (config vozKokoro overrides it): Dora reads Spanish most naturally.
+const KOKORO_VOICE = { es: 'ef_dora', en: 'af_heart', pt: 'pf_dora', ja: 'jf_nezumi' }
 const UNYA = 'OPMFuXBnkGNrWUx7xtZY' // ElevenLabs "Unya": sweet, high Japanese voice; speaks Spanish with an accent
 const NATURAL_CHARS = 480
 
@@ -73,7 +75,7 @@ async function kokoro(text, { idioma = 'es', velocidad, vozKokoro } = {}) {
   try {
     const output = path.join(folder, 'out.wav')
     await new Promise((resolve, reject) => {
-      const child = execFile(KOKORO_PYTHON, [path.join(__dirname, 'tts_kokoro.py'), vozKokoro || 'jf_nezumi', KOKORO_LANG[idioma], String(KOKORO_SPEED[velocidad] ?? 1), output],
+      const child = execFile(KOKORO_PYTHON, [path.join(__dirname, 'tts_kokoro.py'), vozKokoro || KOKORO_VOICE[idioma] || 'ef_dora', KOKORO_LANG[idioma], String(KOKORO_SPEED[velocidad] ?? 1), output],
         { timeout: 60000 }, error => (error ? reject(error) : resolve()))
       child.stdin.end(text)
     })
