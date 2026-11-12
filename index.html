@@ -25,6 +25,20 @@
     animation: rub 1s ease-in-out infinite alternate;
   }
   #hint.on { display: block; }
+  /* The hover toolbar beside her: shown when the cursor comes near; the window only takes clicks over it. */
+  #tools {
+    position: fixed; z-index: 3; right: 8px; top: 112px; display: flex; flex-direction: column; gap: 8px;
+    opacity: 0; transform: translateX(8px); transition: opacity .2s, transform .2s; pointer-events: none;
+  }
+  #tools.on { opacity: 1; transform: none; pointer-events: auto; }
+  #tools button {
+    width: 38px; height: 38px; border: 0; border-radius: 50%; background: #fff; color: #33263a; cursor: pointer;
+    font-size: 18px; line-height: 38px; padding: 0; box-shadow: 0 2px 8px #0003;
+  }
+  #tools button:hover { background: #ffe3ef; }
+  #tools button.on { background: #ff5fa2; color: #fff; }
+  #tools #drag { cursor: grab; }
+  #tools #drag:active { cursor: grabbing; }
   #move {
     position: fixed; bottom: 16px; left: 30px; right: 30px; padding: 8px 10px; display: none;
     background: #4f8ff0; color: #fff; border-radius: 12px;
@@ -56,6 +70,11 @@
 <div id="bubble"></div>
 <div id="hint">↔ Pasa el cursor de lado a lado sobre mi cabeza</div>
 <div id="mic">🎤 Te escucho… Ctrl+Alt+V para terminar</div>
+<div id="tools">
+  <button id="stay" title="Quieta / pasear">📌</button>
+  <button id="menu" title="Menú">☰</button>
+  <button id="drag" title="Arrastrar">✋</button>
+</div>
 <div id="move">Te sigo con el cursor. Ctrl+Alt+C para soltarme aquí</div>
 <script type="module" src="/avatar.js"></script>
 </body>

@@ -233,6 +233,16 @@ new GLTFLoader()
     applySavedStyle().then(() => { window.claudiaReady = true })
   }, undefined, error => console.error(error))
 
+// Hover toolbar: the app tells us when the cursor is near; the buttons talk back to the app.
+const tools = document.getElementById('tools')
+if (tools && window.claudiaChan.act) {
+  document.getElementById('stay').onclick = () => window.claudiaChan.act('stay')
+  document.getElementById('menu').onclick = () => window.claudiaChan.act('menu')
+  const drag = document.getElementById('drag')
+  drag.onpointerdown = e => { drag.setPointerCapture(e.pointerId); window.claudiaChan.act('drag-start') }
+  drag.onpointerup = drag.onpointercancel = () => window.claudiaChan.act('drag-end')
+}
+
 window.claudiaChan.onEvent(event => {
   if (event.type === 'cursor') {
     gaze.position.set(event.x * 3, 1.3 - event.y * 2, 1.5)
@@ -260,6 +270,14 @@ window.claudiaChan.onEvent(event => {
       setTimeout(() => { activity = 'kiss'; activityStart = clock.elapsedTime; activityUntil = clock.elapsedTime + 1.8 }, 2600)
     }
     document.getElementById('hint').classList.remove('on')
+    return
+  }
+  if (event.type === 'near') {
+    tools?.classList.toggle('on', event.value)
+    return
+  }
+  if (event.type === 'still') {
+    document.getElementById('stay')?.classList.toggle('on', event.value)
     return
   }
   if (event.type === 'moving') {

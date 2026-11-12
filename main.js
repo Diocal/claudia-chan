@@ -1,5 +1,5 @@
 // Floating avatar window. Claude Code talks to it through a loopback HTTP port.
-const { app, BrowserWindow, globalShortcut, Menu, nativeImage, screen, Tray } = require('electron')
+const { app, BrowserWindow, globalShortcut, ipcMain, Menu, nativeImage, screen, Tray } = require('electron')
 const { spawn, execFile } = require('child_process')
 const os = require('os')
 const http = require('http')
@@ -383,6 +383,59 @@ function stroll() {
   walkTo(Math.round(x > middle ? area.x + 40 : area.x + area.width - WIDTH - 40), bottomOf(area))
 }
 
+// --- Hover toolbar (index.html #tools): appears when the cursor is near her. The window ignores the
+// mouse except over the buttons, so she never blocks your clicks.
+const TOOLS = { x: WIDTH - 54, y: 106, width: 50, height: 148 } // window pixels, matches #tools
+let isNear = false
+let overTools = false
+let dragging = null // { dx, dy } from the window corner to the cursor while dragged
+
+function hover(cursor) {
+  const [x, y] = win.getPosition()
+  const inside = cursor.x >= x && cursor.x < x + WIDTH && cursor.y >= y && cursor.y < y + HEIGHT
+  const onTools = cursor.x >= x + TOOLS.x && cursor.x < x + TOOLS.x + TOOLS.width && cursor.y >= y + TOOLS.y && cursor.y < y + TOOLS.y + TOOLS.height
+  const near = inside || onTools || Boolean(dragging)
+  if (near !== isNear) {
+    isNear = near
+    win.webContents.send('claudia-chan', { type: 'near', value: near })
+  }
+  const takesClicks = (near && onTools) || Boolean(dragging)
+  if (takesClicks !== overTools) {
+    overTools = takesClicks
+    win.setIgnoreMouseEvents(!takesClicks)
+    if (process.env.CLAUDIA_DEBUG) console.log('clicks', takesClicks, Date.now())
+  }
+  if (dragging) win.setPosition(Math.round(cursor.x - dragging.dx), Math.round(cursor.y - dragging.dy))
+}
+
+ipcMain.on('claudia-ui', (_, action) => {
+  if (process.env.CLAUDIA_DEBUG) console.log('ui', action, Date.now())
+  if (!alive()) return
+  if (action === 'menu') openPanel()
+  if (action === 'stay') {
+    // Quieta: no strolling, dancing or perching until pressed again.
+    const still = readCachedWalk() === 'on'
+    cachedWalk = still ? 'off' : 'on'
+    saveConfig({ pasear: cachedWalk })
+    win.webContents.send('claudia-chan', { type: 'still', value: still })
+    if (still && life.mode !== 'work') {
+      const [x, y] = win.getPosition()
+      standAt(screen.getDisplayNearestPoint({ x, y }).workArea, 9999)
+    }
+  }
+  if (action === 'drag-start') {
+    const cursor = screen.getCursorScreenPoint()
+    const [x, y] = win.getPosition()
+    dragging = { dx: cursor.x - x, dy: cursor.y - y }
+    life = { mode: 'stand', until: Date.now() + 60000 }
+  }
+  if (action === 'drag-end' && dragging) {
+    dragging = null
+    const [x, y] = win.getPosition()
+    saveConfig({ x, y })
+  }
+})
+
 // Work started: she goes back to her spot, waist-up, to type along.
 async function goToWork(area) {
   const home = savedPosition(area)
@@ -393,7 +446,7 @@ async function goToWork(area) {
 }
 
 function live(area) {
-  if (isMoving || isCentering || life.mode === 'hop') return
+  if (isMoving || isCentering || life.mode === 'hop' || dragging) return
   const now = Date.now()
   // A dance ends even with strolling off.
   if (life.mode === 'dance' && now >= life.until) {
@@ -894,6 +947,8 @@ function openAvatar(area) {
   win.loadURL(`http://127.0.0.1:${PORT}/`)
   // If the page crashes reload it; if the window itself goes away, bring her back instead of leaving a headless app.
   win.webContents.on('render-process-gone', () => { if (alive()) win.reload() })
+  // The 📌 button starts showing whether she is staying still.
+  win.webContents.on('did-finish-load', () => win.webContents.send('claudia-chan', { type: 'still', value: readCachedWalk() !== 'on' }))
   win.on('closed', () => {
     win = null
     if (!quitting) setTimeout(() => openAvatar(screen.getPrimaryDisplay().workArea), 1000)
@@ -912,6 +967,7 @@ function createWindow() {
   setInterval(() => {
     if (!alive()) return
     const cursor = screen.getCursorScreenPoint()
+    hover(cursor)
     if (isMoving) win.setPosition(cursor.x - Math.round(WIDTH / 2), cursor.y - 120)
     const [hereX, hereY] = win.getPosition()
     live(screen.getDisplayNearestPoint({ x: hereX + WIDTH / 2, y: hereY + HEIGHT / 2 }).workArea)
