@@ -63,6 +63,8 @@ Adjust with `/claudia tono grave|normal|agudo` and `/claudia velocidad lenta|nor
 
 ## Controls
 
+**Hover buttons:** bring the cursor near her and three buttons appear beside her: 📌 stay still / stroll again, ☰ control panel, ✋ drag her anywhere. Elsewhere her window lets your clicks through.
+
 **Tray menu** (her face next to the clock): hide/show, talk, move, stroll, dance, kiss, control panel, close.
 
 **Keyboard:** Ctrl+Alt+V talk · Ctrl+Alt+H hide/show · Ctrl+Alt+C move her with the cursor (again to drop her).
