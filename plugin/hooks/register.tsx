@@ -615,7 +615,7 @@ export const register: Register = on => {
     void $.clock.every(1500, async () => {
       if (!isInteractive || isWorking || !(await read($, heart)).isOn) return
 
-      const answer = await tell($, { type: 'heard' })
+      const answer = await tell($, { type: 'heard', place })
       const { text = '' } = answer?.ok ? (JSON.parse(answer.text) as { text?: string }) : {}
       // asUser: the model reads what was said as the user's own words, not as a message from the plugin.
       if (text) void $.prompt.submit({ text, asUser: true })

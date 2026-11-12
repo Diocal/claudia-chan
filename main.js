@@ -60,6 +60,10 @@ let recorder = null
 let heard = []
 // What the panel shows: the last thing she understood, and whether she is listening.
 let lastHeard = ''
+let heardAt = 0
+// Which session took the last spoken words (its folder), so the panel can say where they went.
+let lastTaker = null
+let lastSessionBeat = 0 // only a session's heartbeat, not the panel's clicks
 let panel = null
 
 function modelNames() {
@@ -118,6 +122,8 @@ function toggleListen() {
       fs.rmSync(folder, { recursive: true, force: true })
       if (text) heard.push(text)
       lastHeard = text || '(no te entendí)'
+      heardAt = Date.now()
+      lastTaker = null
       win?.webContents.send('claudia-chan', { type: 'heard', text })
     })
   })
@@ -540,6 +546,7 @@ async function handle(req, res) {
     try {
       const event = JSON.parse(await readBody(req))
       if (event.type === 'beat') {
+        lastSessionBeat = Date.now()
         res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ pets: pendingPets, tiredMinutes, name: readConfig().name, personalidad: readConfig().personalidad, voz: readConfig().voz, idioma: readConfig().idioma, bond: bond() }))
         pendingPets = 0
         tiredMinutes = 0
@@ -581,7 +588,9 @@ async function handle(req, res) {
         return
       }
       if (event.type === 'heard') {
-        res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ text: heard.shift() ?? '' }))
+        const text = heard.shift() ?? ''
+        if (text) lastTaker = { place: typeof event.place === 'string' ? event.place : 'una sesión de claude-chan de antes', at: Date.now() }
+        res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ text }))
         return
       }
       if (event.type === 'visible') {
@@ -659,7 +668,9 @@ async function handle(req, res) {
   // Motion-capture files the user downloaded (assets/animations/*.fbx or .glb).
   if (urlPath === '/status') {
     res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
-      listening: Boolean(recorder), lastHeard, visible: alive() && win.isVisible(), doing: life.mode, voice: naturalEngine(readConfig()) ?? 'open-jtalk',
+      listening: Boolean(recorder), lastHeard, waiting: heard.length, heardAt, taker: lastTaker?.place ?? null,
+      // A session that is awake heartbeats every 10 s; none for a while means nobody will answer.
+      listener: Date.now() - lastSessionBeat < 25000, visible: alive() && win.isVisible(), doing: life.mode, voice: naturalEngine(readConfig()) ?? 'open-jtalk',
     }))
     return
   }

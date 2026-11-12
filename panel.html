@@ -82,6 +82,11 @@ async function poll() {
   const heard = document.getElementById('heard')
   heard.innerHTML = ''
   if (st.lastHeard) heard.append('Te entendí: ', Object.assign(document.createElement('b'), { textContent: `“${st.lastHeard}”` }))
+  // Where it went: answered by a session, still waiting, or nobody awake to answer.
+  const note = st.taker ? ` → se lo pasé a la sesión en ${st.taker}`
+    : st.waiting && !st.listener ? ' → ninguna sesión la está escuchando: abre claude-chan o escribe /claudia on'
+    : st.waiting ? ' → esperando a que Claude termine lo que está haciendo…' : ''
+  if (st.lastHeard && note) heard.append(Object.assign(document.createElement('div'), { textContent: note }))
   document.getElementById('visible').textContent = st.visible ? '🙈 Ocultar' : '👀 Mostrar'
 }
 poll()
