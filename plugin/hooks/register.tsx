@@ -851,11 +851,11 @@ export const register: Register = on => {
       await tell($, /beso|bes(it)?o|kiss|mwah|chu~|💋|😘/i.test(e.answer ?? '') ? { type: 'doing', name: 'kiss', seconds: 1.8 } : { type: 'doing', name: 'celebrate', seconds: 2 })
       await tell($, { type: 'react', name: 'feliz', sound: line ? undefined : 'listo', seconds: 3, line: line || undefined })
       const finished = await next(e)
-      // While you chat she says the whole reply; after real work, only the first sentence.
+      // With a natural voice she says her whole reply (the app drops code, links and emoji);
+      // the old Japanese voice only manages the first sentence.
       const { voz } = await read($, heart)
-      const isNatural = voz === 'kokoro' || voz === 'elevenlabs'
-      const isChat = (e.answer ?? '').length < 600 && !/```|^\s*([-*]|\d+\.)\s/m.test(e.answer ?? '')
-      await sayInJapanese($, isNatural && isChat ? (e.answer ?? line) : line).catch(() => undefined)
+      const isNatural = voz === 'kokoro' || voz === 'elevenlabs' || voz === undefined
+      await sayInJapanese($, isNatural ? (e.answer ?? line) : line).catch(() => undefined)
 
       return finished
     }

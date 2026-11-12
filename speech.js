@@ -47,12 +47,13 @@ const KOKORO_PITCH = { grave: 0.94, normal: 1.0, agudo: 1.12 }
 // Spanish clearly with a light Asian lilt.
 const KOKORO_VOICE = { es: 'jf_tebukuro', en: 'af_sky', pt: 'jf_tebukuro', ja: 'jf_tebukuro' }
 const UNYA = 'OPMFuXBnkGNrWUx7xtZY' // ElevenLabs "Unya": sweet, high Japanese voice; speaks Spanish with an accent
-const NATURAL_CHARS = 480
+const NATURAL_CHARS = 2400 // a whole chat reply; code, links and emoji are dropped first
 
 // What reads well aloud: no code, links, markdown, emoji or kaomoji.
 const speakable = text =>
   text
     .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`\n]{1,24})`/g, '$1')
     .replace(/`[^`]*`/g, ' ')
     .replace(/https?:\/\/\S+/g, ' ')
     .replace(/[*_#>|~]/g, ' ')
@@ -131,4 +132,16 @@ async function synthesizeNatural(text, config) {
   return kokoro(line, config)
 }
 
-module.exports = { synthesize, cleanText, synthesizeNatural, naturalEngine, speakable }
+// Sentences grouped into short pieces, so the first one plays while the next is being made.
+function speechPieces(text, size = 220) {
+  const sentences = speakable(text).match(/[^.!?¡¿…]+[.!?…]*|[¡¿][^.!?…]*[.!?…]*/g) ?? []
+  const pieces = []
+  for (const sentence of sentences.map(x => x.trim()).filter(Boolean)) {
+    const last = pieces.length - 1
+    if (last >= 0 && pieces[last].length + sentence.length < size) pieces[last] += ` ${sentence}`
+    else pieces.push(sentence)
+  }
+  return pieces
+}
+
+module.exports = { synthesize, cleanText, synthesizeNatural, naturalEngine, speakable, speechPieces }

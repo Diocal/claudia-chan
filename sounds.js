@@ -45,17 +45,23 @@ function synth(cue) {
 let speech = null
 
 // Answers how many seconds she will be talking, for the mouth.
-export async function playSpeech(base64) {
+// A queued piece starts when the one playing ends; anything else cuts in. Resolves (with its length)
+// when it starts playing, so the mouth moves with it.
+let speechEnds = Promise.resolve()
+export async function playSpeech(base64, queue = false) {
   if (isMuted) return 0
 
   if (audio.state === 'suspended') await audio.resume()
   const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
   const buffer = await audio.decodeAudioData(bytes.buffer)
-  speech?.stop()
-  speech = audio.createBufferSource()
-  speech.buffer = buffer
-  speech.connect(audio.destination)
-  speech.start()
+  if (queue) await speechEnds
+  else speech?.stop()
+  const source = audio.createBufferSource()
+  speech = source
+  source.buffer = buffer
+  source.connect(audio.destination)
+  speechEnds = new Promise(resolve => { source.onended = resolve })
+  source.start()
   return buffer.duration
 }
 

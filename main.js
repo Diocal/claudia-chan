@@ -8,7 +8,7 @@ const path = require('path')
 const { createPetDetector } = require('./pet.js')
 const { createWorkTracker } = require('./work.js')
 const { createLinePicker, createHoverDetector } = require('./lines.js')
-const { synthesize, synthesizeNatural, naturalEngine } = require('./speech.js')
+const { synthesize, synthesizeNatural, naturalEngine, speechPieces } = require('./speech.js')
 const { spanishToKatakana } = require('./spanish.js')
 const I18N = require('./i18n.json')
 
@@ -431,10 +431,23 @@ function warnOutOfHours() {
   comeToCenter()
 }
 
-function speakNatural(text) {
-  return synthesizeNatural(text, readConfig())
-    .then(audio => audio && win?.webContents.send('claudia-chan', { type: 'speak', audio: audio.toString('base64') }))
-    .catch(error => console.error('speech failed', error.message))
+// Speaks the whole text piece by piece: each piece is queued behind the one playing, and a new
+// reply replaces whatever was still waiting from the previous one.
+let speechRun = 0
+async function speakNatural(text) {
+  const run = ++speechRun
+  const config = readConfig()
+  const pieces = speechPieces(text)
+  for (const [i, piece] of pieces.entries()) {
+    if (run !== speechRun) return
+    try {
+      const audio = await synthesizeNatural(piece, config)
+      if (audio && run === speechRun) win?.webContents.send('claudia-chan', { type: 'speak', audio: audio.toString('base64'), queue: i > 0 })
+    } catch (error) {
+      console.error('speech failed', error.message)
+      return
+    }
+  }
 }
 
 function speak(text, voice) {

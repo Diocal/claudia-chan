@@ -266,7 +266,7 @@ window.claudiaChan.onEvent(event => {
     return
   }
   if (event.type === 'speak') {
-    playSpeech(event.audio).then(seconds => { speakTime = seconds }).catch(console.error)
+    playSpeech(event.audio, event.queue).then(seconds => { speakTime = seconds }).catch(console.error)
     return
   }
   if (event.type === 'listening') {
