@@ -58,6 +58,8 @@ const CENTER_HOLD_MS = 12000
 let isCentering = false
 let recorder = null
 let heard = []
+// What the panel shows: the last thing she understood, and whether she is listening.
+let lastHeard = ''
 let panel = null
 
 function modelNames() {
@@ -66,6 +68,35 @@ function modelNames() {
 }
 
 // The microphone is only open between two presses, and the recording is deleted after use.
+// Whisper stays loaded in one process (transcribe.py --serve): the model loads once, not per phrase.
+let whisper = null
+const whisperQueue = []
+function transcribe(file) {
+  if (!whisper) {
+    whisper = spawn(path.join(__dirname, 'vendor/whisper/bin/python'), [path.join(__dirname, 'transcribe.py'), '--serve'], { stdio: ['pipe', 'pipe', 'ignore'] })
+    let pending = ''
+    whisper.stdout.on('data', chunk => {
+      pending += chunk
+      let end
+      while ((end = pending.indexOf('\n')) >= 0) {
+        const line = pending.slice(0, end)
+        pending = pending.slice(end + 1)
+        let text = ''
+        try { text = JSON.parse(line).text ?? '' } catch {}
+        whisperQueue.shift()?.(text)
+      }
+    })
+    whisper.on('exit', () => {
+      whisper = null
+      while (whisperQueue.length) whisperQueue.shift()('')
+    })
+  }
+  return new Promise(resolve => {
+    whisperQueue.push(resolve)
+    whisper.stdin.write(`${file}\t${readConfig().idioma ?? 'es'}\n`)
+  })
+}
+
 function toggleListen() {
   if (recorder) {
     recorder.kill('SIGINT')
@@ -83,10 +114,11 @@ function toggleListen() {
     clearTimeout(limit)
     recorder = null
     win?.webContents.send('claudia-chan', { type: 'listening', value: false })
-    execFile(path.join(__dirname, 'vendor/whisper/bin/python'), [path.join(__dirname, 'transcribe.py'), file], { timeout: 120000 }, (error, stdout) => {
+    transcribe(file).then(text => {
       fs.rmSync(folder, { recursive: true, force: true })
-      const text = error ? '' : stdout.trim()
       if (text) heard.push(text)
+      lastHeard = text || '(no te entendí)'
+      win?.webContents.send('claudia-chan', { type: 'heard', text })
     })
   })
 }
@@ -169,7 +201,7 @@ function refreshTray() {
     { label: 'Pasear 🚶‍♀️', click: stroll },
     { label: 'Bailar 💃', click: () => dance() },
     { label: 'Beso 💋', click: () => show({ type: 'doing', name: 'kiss', seconds: 1.8 }) },
-    { label: 'Panel de ajustes', click: openPanel },
+    { label: 'Panel de control', click: openPanel },
     { type: 'separator' },
     { label: 'Cerrar Claudia-chan', click: dismiss },
   ]))
@@ -552,6 +584,11 @@ async function handle(req, res) {
         res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ text: heard.shift() ?? '' }))
         return
       }
+      if (event.type === 'visible') {
+        toggleVisible()
+        res.writeHead(204).end()
+        return
+      }
       if (event.type === 'close') {
         res.writeHead(204).end()
         dismiss()
@@ -620,6 +657,12 @@ async function handle(req, res) {
 
   const urlPath = req.url.split('?')[0]
   // Motion-capture files the user downloaded (assets/animations/*.fbx or .glb).
+  if (urlPath === '/status') {
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
+      listening: Boolean(recorder), lastHeard, visible: alive() && win.isVisible(), doing: life.mode, voice: naturalEngine(readConfig()) ?? 'open-jtalk',
+    }))
+    return
+  }
   if (urlPath === '/animations') {
     const dir = path.join(__dirname, 'assets/animations')
     const names = fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => /\.(fbx|glb)$/i.test(f)) : []
@@ -716,4 +759,7 @@ app.whenReady().then(() => {
   console.log('hide shortcut registered:', globalShortcut.register(HIDE_KEY, toggleVisible))
 })
 app.on('before-quit', () => { quitting = true })
-app.on('will-quit', () => globalShortcut.unregisterAll())
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
+  whisper?.kill()
+})
