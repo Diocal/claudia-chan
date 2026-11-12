@@ -103,6 +103,17 @@ export const ACTIVITIES = {
     head: [0.04, 0, s(t * 0.8) * 0.06],
     bounce: -0.42,
   }),
+  // Blowing him a kiss, once: fingers to her lips, then the hand opens toward him (send it for ~1.8 s).
+  // `since` is the time since the activity started.
+  kiss: (t, _arg, since = 0) => {
+    const toLips = since < 0.9
+    return {
+      rightUpperArm: toLips ? [-1.5, 0.8, 0.8] : [-1.5, 0.6, 0.55], rightLowerArm: toLips ? [0, 2.4, 0] : [0, 0.55, 0],
+      rightHand: toLips ? [0, 0, -0.2] : [0, 0, 0.3],
+      head: [toLips ? 0.05 : -0.08, 0, toLips ? 0.08 : -0.06], spine: [toLips ? 0.03 : -0.04, 0, 0],
+      kiss: !toLips,
+    }
+  },
   // Dancing, three styles (arg 0, 1, 2), in the full-body view.
   dance: (t, style = 0) => {
     const b = t * 4.2 // beat

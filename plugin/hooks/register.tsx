@@ -280,6 +280,7 @@ const helpText = (say: (typeof UI)[keyof typeof UI]) => [
   `  /claudia lugar top-left | top-right | bottom-left | bottom-right | center: ${say.h[4]}`,
   `  /claudia mover (Ctrl+Alt+C): ${say.h[5]}`,
   '  /claudia baila: 💃',
+  '  /claudia beso: 😘',
   ...Object.entries(SETTINGS).map(([key, list]) => `  /claudia ${key} ${list.join(' | ')}`),
   `  /claudia dime: ${say.h[6]}`,
   `  /claudia horas 9-18 | off: ${say.h[7]}`,
@@ -685,6 +686,10 @@ export const register: Register = on => {
 
       return { text: answer?.ok ? `Modelo: ${value}.` : 'No existe ese modelo. Pon el .vrm en ~/claudia-chan/assets/models.' }
     }
+    if (what === 'beso') {
+      const answer = await tell($, { type: 'doing', name: 'kiss', seconds: 1.8 })
+      return { text: answer?.ok ? '😘' : say.closed }
+    }
     if (what === 'baila') {
       const answer = await tell($, { type: 'dance' })
       return { text: answer?.ok ? '💃 ♪(๑ᴖ◡ᴖ๑)♪' : say.closed }
@@ -765,6 +770,7 @@ export const register: Register = on => {
         await update($, heart, h => feel(h, rivals > 0 ? rivals * 40 : -30, isSweet ? 3 : 0))
         await paint($)
         if (isSweet) await tell($, { type: 'react', name: 'sonrojada', sound: 'sonrojo', seconds: 4 })
+        if (isSweet) await tell($, { type: 'doing', name: 'kiss', seconds: 1.8 })
         if (rivals > 0) await tell($, { type: 'doing', name: 'pout', seconds: 6 })
       }
     }
@@ -836,8 +842,8 @@ export const register: Register = on => {
       })
       await paint($)
       const line = firstSentence(e.answer)
-      // Done: a little cheer, then she goes back to idling.
-      await tell($, { type: 'doing', name: 'celebrate', seconds: 2 })
+      // Done: a little cheer (or a kiss if she sent you one), then she goes back to idling.
+      await tell($, /beso|bes(it)?o|kiss|mwah|chu~|💋|😘/i.test(e.answer ?? '') ? { type: 'doing', name: 'kiss', seconds: 1.8 } : { type: 'doing', name: 'celebrate', seconds: 2 })
       await tell($, { type: 'react', name: 'feliz', sound: line ? undefined : 'listo', seconds: 3, line: line || undefined })
       const finished = await next(e)
       await sayInJapanese($, line).catch(() => undefined)

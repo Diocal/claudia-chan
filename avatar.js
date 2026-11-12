@@ -94,6 +94,7 @@ let shownShape
 let activity = 'idle'
 let activityUntil = 0
 let activityArg
+let activityStart = 0
 let lastBusy = 0
 const bodyPose = Object.fromEntries(Object.entries(REST).map(([bone, r]) => [bone, [...r]]))
 const props = makeProps()
@@ -101,6 +102,7 @@ props.laptop.visible = false
 props.phone.visible = false
 scene.add(props.laptop)
 let bounce = 0
+let kissSent = false
 // 'bust' frames her from the waist up; 'full' pulls back to show all of her (walking, sitting on a window).
 let bodyMode = 'bust'
 let lookY = 1.37
@@ -294,6 +296,7 @@ window.claudiaChan.onEvent(event => {
     if (ACTIVITIES[event.name]) {
       activity = event.name
       activityArg = event.dir
+      activityStart = clock.elapsedTime
       // Untimed work still ends: if nothing new arrives in 90 s the session probably went away.
       activityUntil = clock.elapsedTime + (event.seconds ?? (event.name === 'idle' ? 0 : 90))
       if (event.name === 'idle') activityUntil = 0
@@ -372,7 +375,7 @@ renderer.setAnimationLoop(() => {
     }
     // Jealous and with nothing to do, she stands there with her arms crossed.
     const shown = activity === 'idle' && (mood === 'celosa' || mood === 'yandere') ? 'pout' : activity
-    const goal = ACTIVITIES[shown](t, activityArg)
+    const goal = ACTIVITIES[shown](t, activityArg, t - activityStart)
     for (const bone of Object.keys(REST)) {
       const target = goal[bone] ?? REST[bone]
       // Dances follow the beat closely; everything else eases in.
@@ -386,6 +389,14 @@ renderer.setAnimationLoop(() => {
     props.laptop.visible = Boolean(goal.laptop)
     props.phone.visible = Boolean(goal.phone)
     if (goal.laptop) props.drawScreen(t)
+    // The moment her hand opens, the hearts fly and she makes the kiss face.
+    if (goal.kiss && !kissSent) {
+      spawnHearts()
+      setTimeout(() => spawnHearts('💋'.repeat(1)), 120)
+      reaction = { expr: { happy: 0.6, blinkLeft: 1 }, tilt: -0.08 }
+      reactionTime = 0.9
+    }
+    kissSent = Boolean(goal.kiss)
     for (const bone of ['leftUpperArm', 'leftLowerArm', 'leftHand', 'rightHand', 'neck', 'leftUpperLeg', 'rightUpperLeg', 'leftLowerLeg', 'rightLowerLeg']) pose(bone, ...bodyPose[bone])
     const [sx, sy, sz] = bodyPose.spine
     pose('spine', sx, sy + Math.sin(t * 0.5) * 0.02, sz + Math.sin(t * 0.7) * 0.012)

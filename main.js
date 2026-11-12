@@ -167,6 +167,7 @@ function refreshTray() {
     { label: 'Hablarle (Ctrl+Alt+V)', click: toggleListen },
     { label: 'Moverla (Ctrl+Alt+C)', click: toggleMove },
     { label: 'Bailar 💃', click: () => dance() },
+    { label: 'Beso 💋', click: () => show({ type: 'doing', name: 'kiss', seconds: 1.8 }) },
     { label: 'Panel de ajustes', click: openPanel },
     { type: 'separator' },
     { label: 'Cerrar Claudia-chan', click: dismiss },
