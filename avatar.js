@@ -36,6 +36,11 @@ renderer.setClearColor(0x000000, 0)
 renderer.setPixelRatio(window.claudiaPixelRatio ?? Math.max(2, window.devicePixelRatio))
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
+// The GPU can drop the 3D context (hybrid laptop GPUs, driver resets): reload instead of freezing.
+renderer.domElement.addEventListener('webglcontextlost', event => {
+  event.preventDefault()
+  setTimeout(() => location.reload(), 500)
+})
 
 const scene = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(26, window.innerWidth / window.innerHeight, 0.1, 20)

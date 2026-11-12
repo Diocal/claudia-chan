@@ -215,6 +215,12 @@ function dismiss() {
   app.quit()
 }
 
+// Start over: a fresh app with the same arguments (and --wake, so a "Cerrar" does not keep her away).
+function restart() {
+  app.relaunch({ args: [...process.argv.slice(1).filter(a => a !== '--wake'), '--wake'] })
+  app.exit(0)
+}
+
 let tray = null
 function refreshTray() {
   if (!tray) return
@@ -227,6 +233,7 @@ function refreshTray() {
     { label: 'Bailar 💃', click: () => dance() },
     { label: 'Beso 💋', click: () => show({ type: 'doing', name: 'kiss', seconds: 1.8 }) },
     { label: 'Panel de control', click: openPanel },
+    { label: 'Reiniciar', click: restart },
     { type: 'separator' },
     { label: 'Cerrar Claudia-chan', click: dismiss },
   ]))
@@ -718,6 +725,11 @@ async function handle(req, res) {
         dismiss()
         return
       }
+      if (event.type === 'restart') {
+        res.writeHead(204).end()
+        restart()
+        return
+      }
       if (event.type === 'stroll') {
         stroll()
         res.writeHead(204).end()
@@ -1020,6 +1032,10 @@ app.whenReady().then(() => {
   console.log('hide shortcut registered:', globalShortcut.register(HIDE_KEY, toggleVisible))
 })
 app.on('before-quit', () => { quitting = true })
+// If the GPU process dies, the avatar page reloads (avatar.js also reloads on a lost WebGL context).
+app.on('child-process-gone', (_, details) => {
+  if (details.type === 'GPU' && alive()) setTimeout(() => alive() && win.reload(), 1500)
+})
 app.on('will-quit', () => {
   globalShortcut.unregisterAll()
   whisper?.kill()
