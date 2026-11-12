@@ -7,3 +7,7 @@ promo/
 .studio.lock
 # License unclear ("Other", no URL): kept local only
 assets/models/avatarsample-a.vrm
+
+# Mixamo animations: each user downloads their own (Mixamo terms do not allow redistributing the files)
+assets/animations/*.fbx
+assets/animations/*.glb

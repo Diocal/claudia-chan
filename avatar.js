@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm'
 import { playSound, playSpeech, setMuted } from '/sounds.js'
 import { ACTIVITIES, REST, makeProps } from '/activities.js'
+import { loadMixamoFile } from '/mixamo.js'
 
 // Brief expressions layered over the lasting mood.
 const REACTIONS = {
@@ -103,6 +104,33 @@ props.phone.visible = false
 scene.add(props.laptop)
 let bounce = 0
 let kissSent = false
+// Motion capture: assets/animations/<activity>[-n].fbx (Mixamo) replaces the hand-made pose for that activity.
+const mocap = {}
+let mixer = null
+let playing = null
+let playingAction = null
+async function loadMocap() {
+  const names = await fetch('/animations').then(r => r.json()).catch(() => [])
+  mixer = new THREE.AnimationMixer(vrm.scene)
+  // walk.fbx -> walk, dance-2.fbx -> dance (an FBX holds one motion; its fullest clip is it).
+  // A GLB with several named clips files each one under its own name.
+  for (const file of names) {
+    try {
+      const clips = (await loadMixamoFile(`/assets/animations/${file}`, vrm)).filter(c => c.clip.tracks.length > 0)
+      const isFbx = /\.fbx$/i.test(file)
+      const picked = isFbx ? [clips.sort((a, b) => b.clip.tracks.length - a.clip.tracks.length)[0]].filter(Boolean) : clips
+      for (const { name, clip } of picked) {
+        const activity = (isFbx ? file.replace(/\.fbx$/i, '') : name).replace(/[-_ ]?\d+$/, '').toLowerCase()
+        ;(mocap[activity] ??= []).push(clip)
+      }
+    } catch (error) {
+      console.error('mocap', file, error)
+    }
+  }
+}
+// For dev/poses.html and debugging: what loaded.
+window.claudiaMocap = mocap
+const mocapFor = (name, arg) => (mocap[name]?.length ? mocap[name][(Number(arg) || 0) % mocap[name].length] : null)
 // 'bust' frames her from the waist up; 'full' pulls back to show all of her (walking, sitting on a window).
 let bodyMode = 'bust'
 let lookY = 1.37
@@ -237,6 +265,7 @@ new GLTFLoader()
       hand.add(props.phone)
       props.phone.position.set(0, -0.06, 0.04)
     }
+    loadMocap()
     applySavedStyle().then(() => { window.claudiaReady = true })
   }, undefined, error => console.error(error))
 
@@ -396,6 +425,18 @@ renderer.setAnimationLoop(() => {
       reactionTime = 0.9
     }
     kissSent = Boolean(goal.kiss)
+    // A real recorded motion for this activity wins over the hand-made pose.
+    const clip = mocapFor(shown, activityArg)
+    if (clip !== playing) {
+      playingAction?.fadeOut(0.3)
+      playingAction = clip ? mixer.clipAction(clip).reset().fadeIn(0.3).play() : null
+      if (!clip) relaxHands()
+      playing = clip
+    }
+    if (clip) {
+      mixer.update(dt)
+      vrm.scene.position.y = 0
+    } else {
     for (const bone of ['leftUpperArm', 'leftLowerArm', 'leftHand', 'rightHand', 'neck', 'leftUpperLeg', 'rightUpperLeg', 'leftLowerLeg', 'rightLowerLeg', 'leftFoot', 'rightFoot']) pose(bone, ...bodyPose[bone])
     const [cx, cy, cz] = bodyPose.chest
     pose('chest', cx + breath * 0.015, cy, cz)
@@ -422,6 +463,7 @@ renderer.setAnimationLoop(() => {
       else relaxHands()
     }
     pose('hips', ...bodyPose.hips)
+    }
     if (reaction?.isSleepy && t > nextZ) {
       nextZ = t + 2.5
       spawnHearts('z')

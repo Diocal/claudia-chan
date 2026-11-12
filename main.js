@@ -616,6 +616,13 @@ async function handle(req, res) {
   }
 
   const urlPath = req.url.split('?')[0]
+  // Motion-capture files the user downloaded (assets/animations/*.fbx or .glb).
+  if (urlPath === '/animations') {
+    const dir = path.join(__dirname, 'assets/animations')
+    const names = fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => /\.(fbx|glb)$/i.test(f)) : []
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(names))
+    return
+  }
   if (urlPath === '/models') {
     res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(modelNames()))
     return
