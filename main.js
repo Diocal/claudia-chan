@@ -193,8 +193,11 @@ function openPanel() {
 // --- Her own life on the desktop: strolling along the bottom of the screen, sitting on top of the
 // window you are using, and going back to her spot to work alongside Claude.
 const SEAT_Y = 410 // where her seat is, in window pixels, in the full-body view (measured on the models)
-// Matches her steps (activities.js WALK_CADENCE/WALK_STRIDE) so her feet do not skate.
-const WALK_PX_PER_S = 170
+// How fast the window travels must match her steps or her feet skate. The hand-made walk
+// (activities.js WALK_CADENCE/WALK_STRIDE) is 170 px/s; a motion-capture walk has its own pace,
+// measured from its feet (Mixamo "Catwalk Walk": 1.19 steps/s, ~0.5 m on her scale, ~145 px/s seen
+// three-quarters). config.walkPxPerS overrides both for another walk file.
+const walkPxPerS = () => readConfig().walkPxPerS ?? (fs.existsSync(path.join(__dirname, 'assets/animations/walk.fbx')) ? 145 : 170)
 const BUSY_MS = 8000 // a work event keeps her at her spot this long
 const canSeeWindows = process.platform === 'linux' && process.env.XDG_SESSION_TYPE !== 'wayland'
 let life = { mode: 'stand', until: Date.now() + 20000 }
@@ -239,7 +242,7 @@ function walkStep() {
   if (!alive() || life.mode !== 'walk' || isMoving) return
   const { from, to, at } = life
   const total = Math.hypot(to.x - from.x, to.y - from.y)
-  const done = Math.min(total, ((Date.now() - at) / 1000) * WALK_PX_PER_S)
+  const done = Math.min(total, ((Date.now() - at) / 1000) * (life.speed ??= walkPxPerS()))
   if (done >= total) {
     win.setPosition(to.x, to.y)
     void arrive(screen.getDisplayNearestPoint({ x: to.x + WIDTH / 2, y: to.y + HEIGHT / 2 }).workArea)
