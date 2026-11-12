@@ -10,6 +10,10 @@
   header { display: flex; gap: 14px; align-items: center; padding: 18px 20px 12px; }
   header img { width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--pink); }
   header h1 { margin: 0; font-size: 20px; }
+  .by { font-size: 12px; color: var(--soft); }
+  .by a { color: var(--pink); text-decoration: none; font-weight: 600; }
+  .credit { margin-top: 26px; padding-top: 14px; border-top: 2px solid var(--line); font-size: 13px; color: var(--soft); }
+  .credit a { color: var(--pink); font-weight: 600; text-decoration: none; }
   .state { display: inline-flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 13px; color: var(--soft); }
   .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--soft); }
   .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.live { background: var(--pink); animation: blink 0.8s infinite alternate; }
@@ -62,6 +66,7 @@
   <img src="/assets/tray.png" alt="">
   <div>
     <h1 id="name">Claudia-chan</h1>
+    <div class="by">por <a href="https://github.com/Diocal/claudia-chan" target="_blank">Dio Calderon</a></div>
     <div class="state"><span class="dot" id="dot"></span><span id="state">…</span></div>
   </div>
 </header>
@@ -106,6 +111,7 @@
     <p class="hint"><code>/claudia help</code> lista todo · <code>/claudia on</code> / <code>off</code> · <code>/claudia baila</code> · <code>/claudia beso</code> · <code>/claudia panel</code></p>
     <h2>Menú del ícono</h2>
     <p class="hint">Junto al reloj, en la barra de arriba: clic en la carita de Claudia.</p>
+    <div class="credit">Claudia-chan fue creada por <b>Dio Calderon</b> · <a href="https://github.com/Diocal/claudia-chan" target="_blank">github.com/Diocal/claudia-chan</a><br>Gratis para uso personal (licencia PolyForm Noncommercial). Si la compartes o haces tu versión, da crédito a su creador.</div>
   </section>
 </main>
 <script>

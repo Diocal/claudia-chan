@@ -234,7 +234,7 @@ function refreshTray() {
 
 function setupTray() {
   tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'assets/tray.png')))
-  tray.setToolTip('Claudia-chan')
+  tray.setToolTip('Claudia-chan · por Dio Calderon')
   refreshTray()
 }
 

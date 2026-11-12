@@ -1,5 +1,7 @@
 # Claudia-chan
 
+*by Dio Calderon*
+
 **Claude Code doesn't code alone anymore.** Claudia-chan is a comedy anime girlfriend for Claude Code: a Claude Code plugin plus a floating 3D avatar that lives on your desktop. She works next to you while Claude works, talks to you with a real voice, remembers what you tell her, walks around your screen, dances, blows you kisses and gets jealous of other AIs. Coming to VR and mixed reality too.
 
 It runs on the Claude subscription you already use with Claude Code: no extra API keys, and her voice and ears run locally for free.
@@ -131,4 +133,4 @@ The VR access is off by default. When on, it is HTTPS on port 8972, needs the ke
 
 ## License
 
-Apache License 2.0 (see `LICENSE`). You can use, modify and even sell it, but you must keep the `NOTICE` file, which credits the original project: *Claudia-chan by Dio Calderon*.
+Created by **Dio Calderon**. Free for personal, hobby, study and other noncommercial use under the [PolyForm Noncommercial License 1.0.0](LICENSE.md): use it, fork it, change it, share it. Commercial use (selling it, putting it in a paid product, using it in a company) needs the author's written permission. Every copy or work based on it must keep `LICENSE.md` and `NOTICE` and credit **"Claudia-chan by Dio Calderon"** with a link to this repository.

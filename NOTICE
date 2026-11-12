@@ -1,11 +1,12 @@
 Claudia-chan
-Copyright 2026 Dio Calderon (github.com/Diocal) and the Claudia-chan contributors.
+Created by Dio Calderon (https://github.com/Diocal/claudia-chan).
 
-Original project: https://github.com/Diocal/claudia-chan
+Required Notice: Copyright 2026 Dio Calderon (https://github.com/Diocal/claudia-chan)
 
-If you use, modify or redistribute Claudia-chan (or a work based on it), the Apache
-License 2.0 requires you to keep this NOTICE file with it. Please also credit the
-original project visibly, e.g. "Based on Claudia-chan by Dio Calderon".
+Free for personal, hobby, study and other noncommercial use under the PolyForm
+Noncommercial License 1.0.0 (LICENSE.md). Any copy, fork or work based on it must keep
+these notices and credit "Claudia-chan by Dio Calderon". Commercial use needs written
+permission from the author.
 
 Third-party parts, under their own licenses:
 - VRM models vita, hairsample-female, darkness-shibu: CC0. VRM sample model: pixiv.

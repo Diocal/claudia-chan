@@ -3,5 +3,9 @@
   "version": "0.1.0",
   "description": "Claude Code becomes Claudia-chan, a jealous comedy yandere girlfriend with animated eyes beside the chat",
   "types": "./types/index.d.ts",
-  "license": "Apache-2.0"
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "author": {
+    "name": "Dio Calderon",
+    "url": "https://github.com/Diocal"
+  }
 }
