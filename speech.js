@@ -134,7 +134,8 @@ async function synthesizeNatural(text, config) {
 
 // Sentences grouped into short pieces, so the first one plays while the next is being made.
 function speechPieces(text, size = 220) {
-  const sentences = speakable(text).match(/[^.!?¡¿…]+[.!?…]*|[¡¿][^.!?…]*[.!?…]*/g) ?? []
+  // A sentence ends at . ! ? … followed by a space, so main.js or 3.5 stay whole.
+  const sentences = speakable(text).split(/(?<=[.!?…])\s+/)
   const pieces = []
   for (const sentence of sentences.map(x => x.trim()).filter(Boolean)) {
     const last = pieces.length - 1
