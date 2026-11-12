@@ -25,6 +25,14 @@ export function setMuted(value) {
   isMuted = Boolean(value)
 }
 
+// Her short voiced reactions: assets/sounds/<lang>/<name>.mp3 in her own (Kokoro) voice for that language;
+// the Japanese clips in assets/sounds/ when she speaks with the old Japanese voice or has no clips for it.
+let clipFolder = ''
+export function setVoice({ voz, idioma } = {}) {
+  const natural = voz === undefined || voz === 'kokoro' || voz === 'elevenlabs'
+  clipFolder = natural && ['es', 'en'].includes(idioma ?? 'es') ? `${idioma ?? 'es'}/` : ''
+}
+
 function synth(cue) {
   let at = audio.currentTime + 0.01
   for (const [frequency, length] of cue.notes) {
@@ -70,7 +78,7 @@ export async function playSound(name) {
   if (isMuted || !cue) return
 
   if (audio.state === 'suspended') await audio.resume()
-  const recorded = await fetch(`/assets/sounds/${name}.mp3`).catch(() => null)
+  const recorded = await fetch(`/assets/sounds/${clipFolder}${name}.mp3`).catch(() => null)
   if (recorded?.ok) {
     const buffer = await audio.decodeAudioData(await recorded.arrayBuffer())
     const source = audio.createBufferSource()

@@ -548,7 +548,11 @@ function bond() {
 
 function sayLine() {
   if ((readConfig().idioma ?? 'es') !== 'es') return
-  win?.webContents.send('claudia-chan', pickLine({ hour: new Date().getHours(), ...bond() }))
+  const said = pickLine({ hour: new Date().getHours(), ...bond() })
+  // Her own little comments are spoken too, in her generated voice (then no extra voiced clip on top).
+  const speaks = Boolean(said?.line && naturalEngine(readConfig()))
+  win?.webContents.send('claudia-chan', speaks ? { ...said, sound: undefined } : said)
+  if (speaks) speakNatural(said.line)
 }
 
 // Only while the user is around: nobody talks to an empty chair.
@@ -676,7 +680,9 @@ async function handle(req, res) {
       }
       if (event.type === 'speak' && typeof event.text === 'string') {
         // A natural voice reads the real text; Open JTalk needs it spelled in kana.
-        if (event.natural && naturalEngine(readConfig())) speakNatural(event.text)
+        // The voice chosen now decides, not what an older session remembers: Spanish text from any
+        // plugin version is read by the natural voice when there is one.
+        if ((event.natural || event.isSpanish) && naturalEngine(readConfig())) speakNatural(event.text)
         else speak(event.isSpanish ? spanishToKatakana(event.text) : event.text, event.voice)
         res.writeHead(204).end()
         return
@@ -983,7 +989,13 @@ function createWindow() {
       win.webContents.send('claudia-chan', { type: 'pet' })
     }
     const noticed = isMoving ? null : detectHover(cursor.x - bounds.x, cursor.y - bounds.y, Date.now())
-    if (noticed) win.webContents.send('claudia-chan', (readConfig().idioma ?? 'es') === 'es' ? noticed : { ...noticed, line: undefined })
+    if (noticed) {
+      const isSpanish = (readConfig().idioma ?? 'es') === 'es'
+      // "¿Me estás mirando?": said aloud, in her generated voice (instead of the voiced clip).
+      const speaks = Boolean(isSpanish && noticed.line && naturalEngine(readConfig()))
+      win.webContents.send('claudia-chan', !isSpanish ? { ...noticed, line: undefined } : speaks ? { ...noticed, sound: undefined } : noticed)
+      if (speaks) speakNatural(noticed.line)
+    }
     if (!stayOpen && Date.now() - lastBeat > IDLE_LIMIT_MS) app.quit()
   }, 50)
 }

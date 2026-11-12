@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm'
-import { playSound, playSpeech, setMuted } from '/sounds.js'
+import { playSound, playSpeech, setMuted, setVoice } from '/sounds.js'
 import { ACTIVITIES, REST, makeProps } from '/activities.js'
 import { loadMixamoFile } from '/mixamo.js'
 import { STYLE_MATCH, applyStyle as applyVrmStyle } from '/style.js'
@@ -77,6 +77,7 @@ function applyLanguage(code) {
   for (const id of ['hint', 'move', 'mic']) document.getElementById(id).textContent = language[id]
 }
 let petTime = 0
+let voiceSettings = {}
 // Being petted: how long the current petting has lasted, and how much she leans into your hand (0..1).
 let petStreak = 0
 let lastPetAt = -10
@@ -152,6 +153,8 @@ async function applySavedStyle() {
   for (const part of Object.keys(STYLE_MATCH)) applyStyle(part, config[part] ?? null)
   document.getElementById('hint').classList.toggle('on', !config.petDone)
   setMuted(config.muted)
+  voiceSettings = { voz: config.voz, idioma: config.idioma }
+  setVoice(voiceSettings)
   applyLanguage(config.idioma)
   baseCamera.z = CAMERA_DISTANCE[config.tamano] ?? CAMERA_DISTANCE.normal
 }
@@ -302,6 +305,10 @@ window.claudiaChan.onEvent(event => {
   }
   if (event.type === 'setting') {
     if (event.key === 'idioma') applyLanguage(event.value)
+    if (event.key === 'idioma' || event.key === 'voz') {
+      voiceSettings = { ...voiceSettings, [event.key]: event.value }
+      setVoice(voiceSettings)
+    }
     if (event.key === 'tamano') baseCamera.z = CAMERA_DISTANCE[event.value]
     if (event.key === 'pasear' && event.value === 'off') walking = 0
     return
