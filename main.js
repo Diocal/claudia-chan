@@ -8,7 +8,7 @@ const path = require('path')
 const { createPetDetector } = require('./pet.js')
 const { createWorkTracker } = require('./work.js')
 const { createLinePicker, createHoverDetector } = require('./lines.js')
-const { synthesize } = require('./speech.js')
+const { synthesize, synthesizeNatural, naturalEngine } = require('./speech.js')
 const { spanishToKatakana } = require('./spanish.js')
 const I18N = require('./i18n.json')
 
@@ -45,7 +45,7 @@ const MAX_LISTEN_MS = 60000
 const SKIN = ['#fff4ef', '#ffe3e0', '#f9e6d6', '#f6dcc4']
 const SETTINGS = {
   personalidad: ['yandere', 'tsundere', 'dulce', 'kuudere', 'onee-san'],
-  voz: ['espanol', 'japones'],
+  voz: ['kokoro', 'elevenlabs', 'espanol', 'japones'],
   tono: ['grave', 'normal', 'agudo'],
   velocidad: ['lenta', 'normal', 'rapida'],
   tamano: ['chico', 'normal', 'grande'],
@@ -413,6 +413,10 @@ function warnIfTired() {
 
 function scoldToRest(line, seconds = 8) {
   win?.webContents.send('claudia-chan', { type: 'react', name: 'descansa', seconds, line })
+  if (naturalEngine(readConfig())) {
+    speakNatural(line)
+    return
+  }
   const hasAccent = (readConfig().voz ?? 'espanol') === 'espanol'
   speak(hasAccent ? texts().kana : REST_VOICE[Math.floor(Math.random() * REST_VOICE.length)], 'bashful')
 }
@@ -425,6 +429,12 @@ function warnOutOfHours() {
   saveConfig({ work: work.snapshot() })
   scoldToRest(fill(texts().hours, hours), 14)
   comeToCenter()
+}
+
+function speakNatural(text) {
+  return synthesizeNatural(text, readConfig())
+    .then(audio => audio && win?.webContents.send('claudia-chan', { type: 'speak', audio: audio.toString('base64') }))
+    .catch(error => console.error('speech failed', error.message))
 }
 
 function speak(text, voice) {
@@ -486,7 +496,9 @@ async function handle(req, res) {
         return
       }
       if (event.type === 'speak' && typeof event.text === 'string') {
-        speak(event.isSpanish ? spanishToKatakana(event.text) : event.text, event.voice)
+        // A natural voice reads the real text; Open JTalk needs it spelled in kana.
+        if (event.natural && naturalEngine(readConfig())) speakNatural(event.text)
+        else speak(event.isSpanish ? spanishToKatakana(event.text) : event.text, event.voice)
         res.writeHead(204).end()
         return
       }

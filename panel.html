@@ -30,14 +30,14 @@ const COLORS = {
 }
 const CHOICES = {
   personalidad: ['yandere', 'tsundere', 'dulce', 'kuudere', 'onee-san'],
-  voz: ['espanol', 'japones'],
+  voz: ['kokoro', 'elevenlabs', 'espanol', 'japones'],
   tono: ['grave', 'normal', 'agudo'],
   velocidad: ['lenta', 'normal', 'rapida'],
   tamano: ['chico', 'normal', 'grande'],
   pasear: ['off', 'on'],
   idioma: ['es', 'en', 'ru', 'pt', 'ja'],
 }
-const DEFAULTS = { personalidad: 'yandere', voz: 'espanol', tono: 'normal', velocidad: 'normal', tamano: 'normal', pasear: 'off', idioma: 'es', modelo: 'vita' }
+const DEFAULTS = { personalidad: 'yandere', voz: 'kokoro', tono: 'normal', velocidad: 'normal', tamano: 'normal', pasear: 'on', idioma: 'es', modelo: 'vita' }
 const root = document.getElementById('root')
 const send = body => fetch('/event', { method: 'POST', headers: { 'x-claudia-chan': '1' }, body: JSON.stringify(body) })
 

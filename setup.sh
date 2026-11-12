@@ -1,5 +1,5 @@
 #!/bin/sh
-# Installs what is not kept in git: npm packages, Open JTalk with the Mei voice, Whisper,
+# Installs what is not kept in git: npm packages, Open JTalk with the Mei voice, Whisper, Kokoro (her voice),
 # and the `claude-chan` command. Ubuntu/Debian or macOS with Homebrew.
 set -e
 cd "$(dirname "$0")"
@@ -24,6 +24,13 @@ else
 fi
 uv venv -q vendor/whisper --python 3.11
 uv pip install -q --python vendor/whisper/bin/python faster-whisper
+# Kokoro: a natural local voice, free and offline (~120 MB of model files).
+uv venv -q vendor/kokoro --python 3.11
+uv pip install -q --python vendor/kokoro/bin/python kokoro-onnx soundfile
+mkdir -p vendor/kokoro/model
+for f in kokoro-v1.0.int8.onnx voices-v1.0.bin; do
+  [ -f "vendor/kokoro/model/$f" ] || curl -sSL -o "vendor/kokoro/model/$f" "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/$f"
+done
 mkdir -p "$HOME/.local/bin"
 printf '#!/bin/sh\nexec claude --plugin-dir "%s/plugin" "$@"\n' "$PWD" > "$HOME/.local/bin/claude-chan"
 chmod +x "$HOME/.local/bin/claude-chan"

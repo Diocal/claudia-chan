@@ -34,4 +34,88 @@ async function synthesize(text, voice, { tono, velocidad } = {}) {
   }
 }
 
-module.exports = { synthesize, cleanText }
+
+// --- Natural voices: Kokoro (local, free, the default) and ElevenLabs (optional, needs a key).
+// Kokoro runs vendor/kokoro (setup.sh); ElevenLabs reads ELEVENLABS_API_KEY or ~/.config/claudia-chan/elevenlabs.key.
+const KOKORO_PYTHON = path.join(ROOT, 'kokoro/bin/python')
+const KOKORO_LANG = { es: 'es', en: 'en-us', pt: 'pt-br', ja: 'ja' }
+const KOKORO_SPEED = { lenta: 0.88, normal: 1.0, rapida: 1.15 }
+const UNYA = 'OPMFuXBnkGNrWUx7xtZY' // ElevenLabs "Unya": sweet, high Japanese voice; speaks Spanish with an accent
+const NATURAL_CHARS = 480
+
+// What reads well aloud: no code, links, markdown, emoji or kaomoji.
+const speakable = text =>
+  text
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/[*_#>|~]/g, ' ')
+    .replace(/\p{Extended_Pictographic}/gu, ' ')
+    .replace(/\([^\p{L}\p{N}\s]{1,}[^)]{0,12}\)/gu, ' ')
+    .replace(/[♡♥☆★♪]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, NATURAL_CHARS)
+
+const hasKokoro = () => fs.existsSync(KOKORO_PYTHON) && fs.existsSync(path.join(ROOT, 'kokoro/model/voices-v1.0.bin'))
+
+function elevenLabsKey() {
+  if (process.env.ELEVENLABS_API_KEY) return process.env.ELEVENLABS_API_KEY.trim()
+  try {
+    return fs.readFileSync(path.join(os.homedir(), '.config/claudia-chan/elevenlabs.key'), 'utf8').trim()
+  } catch {
+    return ''
+  }
+}
+
+async function kokoro(text, { idioma = 'es', velocidad, vozKokoro } = {}) {
+  const folder = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'claudia-kokoro-'))
+  try {
+    const output = path.join(folder, 'out.wav')
+    await new Promise((resolve, reject) => {
+      const child = execFile(KOKORO_PYTHON, [path.join(__dirname, 'tts_kokoro.py'), vozKokoro || 'jf_nezumi', KOKORO_LANG[idioma], String(KOKORO_SPEED[velocidad] ?? 1), output],
+        { timeout: 60000 }, error => (error ? reject(error) : resolve()))
+      child.stdin.end(text)
+    })
+    return await fs.promises.readFile(output)
+  } finally {
+    await fs.promises.rm(folder, { recursive: true, force: true })
+  }
+}
+
+async function elevenLabs(text, { idioma = 'es', vozEleven } = {}) {
+  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${vozEleven || UNYA}?output_format=mp3_44100_128`, {
+    method: 'POST',
+    headers: { 'xi-api-key': elevenLabsKey(), 'content-type': 'application/json' },
+    body: JSON.stringify({ text, model_id: 'eleven_flash_v2_5', language_code: idioma }),
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!response.ok) throw new Error(`ElevenLabs ${response.status}`)
+  return Buffer.from(await response.arrayBuffer())
+}
+
+// Which voice will speak: the one chosen if it can (key present, language supported), else the next one.
+function naturalEngine(config) {
+  const lang = config.idioma ?? 'es'
+  const voz = config.voz ?? 'kokoro'
+  if (voz === 'elevenlabs' && elevenLabsKey()) return 'elevenlabs'
+  if ((voz === 'kokoro' || voz === 'elevenlabs') && KOKORO_LANG[lang] && hasKokoro()) return 'kokoro'
+  return null
+}
+
+async function synthesizeNatural(text, config) {
+  const line = speakable(text)
+  const engine = naturalEngine(config)
+  if (!line || !engine) return null
+  if (engine === 'elevenlabs') {
+    try {
+      return await elevenLabs(line, config)
+    } catch (error) {
+      console.error('elevenlabs failed, using kokoro', error.message)
+      if (!KOKORO_LANG[config.idioma ?? 'es'] || !hasKokoro()) return null
+    }
+  }
+  return kokoro(line, config)
+}
+
+module.exports = { synthesize, cleanText, synthesizeNatural, naturalEngine, speakable }

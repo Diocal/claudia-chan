@@ -21,7 +21,7 @@ const start: Heart = {
   days: 0,
   petCount: 0,
   personalidad: 'yandere',
-  voz: 'espanol',
+  voz: 'kokoro',
   idioma: '',
   level: 1,
   affection: 0,
@@ -70,7 +70,7 @@ const UNLOCK_LEVEL: Record<string, number> = { sakura: 2, medianoche: 4 }
 
 const SETTINGS: Record<string, string[]> = {
   personalidad: ['yandere', 'tsundere', 'dulce', 'kuudere', 'onee-san'],
-  voz: ['espanol', 'japones'],
+  voz: ['kokoro', 'elevenlabs', 'espanol', 'japones'],
   tono: ['grave', 'normal', 'agudo'],
   velocidad: ['lenta', 'normal', 'rapida'],
   tamano: ['chico', 'normal', 'grande'],
@@ -453,6 +453,11 @@ async function sayInJapanese($: Engine, line: string) {
 
   const { voz, idioma } = await read($, heart)
   const voice = VOICE_OF[moodOf(await read($, heart))]
+  // A natural voice (Kokoro, ElevenLabs) reads her real words; the app falls back to Open JTalk when it cannot.
+  if (voz === 'kokoro' || voz === 'elevenlabs' || voz === undefined) {
+    await tell($, { type: 'speak', text: line, natural: true, isSpanish: idioma === '' || idioma === 'es', voice })
+    return
+  }
   if (idioma === 'ja') {
     await tell($, { type: 'speak', text: line, voice })
     return
@@ -846,7 +851,11 @@ export const register: Register = on => {
       await tell($, /beso|bes(it)?o|kiss|mwah|chu~|💋|😘/i.test(e.answer ?? '') ? { type: 'doing', name: 'kiss', seconds: 1.8 } : { type: 'doing', name: 'celebrate', seconds: 2 })
       await tell($, { type: 'react', name: 'feliz', sound: line ? undefined : 'listo', seconds: 3, line: line || undefined })
       const finished = await next(e)
-      await sayInJapanese($, line).catch(() => undefined)
+      // While you chat she says the whole reply; after real work, only the first sentence.
+      const { voz } = await read($, heart)
+      const isNatural = voz === 'kokoro' || voz === 'elevenlabs'
+      const isChat = (e.answer ?? '').length < 600 && !/```|^\s*([-*]|\d+\.)\s/m.test(e.answer ?? '')
+      await sayInJapanese($, isNatural && isChat ? (e.answer ?? line) : line).catch(() => undefined)
 
       return finished
     }
