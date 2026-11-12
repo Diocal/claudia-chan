@@ -166,6 +166,7 @@ function refreshTray() {
     { label: shown ? 'Ocultar (Ctrl+Alt+H)' : 'Mostrar (Ctrl+Alt+H)', click: toggleVisible },
     { label: 'Hablarle (Ctrl+Alt+V)', click: toggleListen },
     { label: 'Moverla (Ctrl+Alt+C)', click: toggleMove },
+    { label: 'Pasear 🚶‍♀️', click: stroll },
     { label: 'Bailar 💃', click: () => dance() },
     { label: 'Beso 💋', click: () => show({ type: 'doing', name: 'kiss', seconds: 1.8 }) },
     { label: 'Panel de ajustes', click: openPanel },
@@ -261,6 +262,15 @@ function dance(seconds = 10) {
   life = { mode: 'dance', until: Date.now() + seconds * 1000 }
   show({ type: 'body', mode: 'full' })
   show({ type: 'doing', name: 'dance', dir: Math.floor(Math.random() * 3), seconds })
+}
+
+// A walk right now (tray, /event "stroll"): to the far side of the screen she is on.
+function stroll() {
+  if (!alive()) return
+  const [x, y] = win.getPosition()
+  const area = screen.getDisplayNearestPoint({ x: x + WIDTH / 2, y: y + HEIGHT / 2 }).workArea
+  const middle = area.x + (area.width - WIDTH) / 2
+  walkTo(Math.round(x > middle ? area.x + 40 : area.x + area.width - WIDTH - 40), bottomOf(area))
 }
 
 // Work started: she goes back to her spot, waist-up, to type along.
@@ -532,6 +542,11 @@ async function handle(req, res) {
       }
       if (event.type === 'heard') {
         res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ text: heard.shift() ?? '' }))
+        return
+      }
+      if (event.type === 'stroll') {
+        stroll()
+        res.writeHead(204).end()
         return
       }
       if (event.type === 'dance') {
