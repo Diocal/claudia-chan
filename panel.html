@@ -4,132 +4,243 @@
 <meta charset="utf-8">
 <title>Claudia-chan</title>
 <style>
-  :root { --ink: #33263a; --soft: #8b7a92; --line: #f0dbe6; --bg: #fff7fb; --pink: #ff5fa2; }
+  :root { --ink: #33263a; --soft: #8b7a92; --line: #f0dbe6; --bg: #fff7fb; --card: #fff; --pink: #ff5fa2; --pink-soft: #ffe3ef; --ok: #3fae6b; --warn: #e0912f; }
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 22px 24px 30px; background: var(--bg); color: var(--ink); font: 15px system-ui, sans-serif; }
-  h1 { margin: 0 0 18px; font-size: 22px; }
-  h2 { margin: 20px 0 8px; font-size: 13px; color: var(--soft); }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; }
-  button { padding: 7px 13px; border: 2px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink); font: 600 14px system-ui, sans-serif; cursor: pointer; }
-  button.on { border-color: var(--pink); color: var(--pink); }
-  button.swatch { width: 36px; height: 36px; padding: 0; }
-  button.swatch.on { outline: 3px solid var(--pink); outline-offset: 1px; border-color: #fff; }
-  .now { background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 16px; margin-bottom: 6px; }
-  .mic { width: 100%; padding: 14px; font-size: 17px; border-color: var(--pink); background: var(--pink); color: #fff; }
-  .mic.on { background: #fff; color: var(--pink); animation: pulse 1s ease-in-out infinite alternate; }
-  @keyframes pulse { to { box-shadow: 0 0 0 6px #ff5fa233; } }
-  .heard { margin: 10px 2px 2px; color: var(--soft); font-size: 14px; min-height: 20px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px system-ui, sans-serif; }
+  header { display: flex; gap: 14px; align-items: center; padding: 18px 20px 12px; }
+  header img { width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--pink); }
+  header h1 { margin: 0; font-size: 20px; }
+  .state { display: inline-flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 13px; color: var(--soft); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--soft); }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.live { background: var(--pink); animation: blink 0.8s infinite alternate; }
+  @keyframes blink { to { opacity: 0.3; } }
+  .talk { padding: 0 20px 6px; }
+  .mic { width: 100%; padding: 14px; border: 0; border-radius: 16px; background: var(--pink); color: #fff; font: 700 17px system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 0 #d9407f; }
+  .mic:active { transform: translateY(2px); box-shadow: 0 2px 0 #d9407f; }
+  .mic.on { background: #fff; color: var(--pink); border: 2px solid var(--pink); box-shadow: 0 0 0 6px #ff5fa222; }
+  .heard { margin: 8px 4px 0; font-size: 13.5px; color: var(--soft); min-height: 18px; }
   .heard b { color: var(--ink); font-weight: 600; }
-  .actions { margin-top: 12px; }
-  .keys { margin: 10px 2px 0; color: var(--soft); font-size: 13px; line-height: 1.7; }
-  kbd { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font: 600 12px system-ui, sans-serif; color: var(--ink); }
-  input { padding: 8px 12px; border: 2px solid var(--line); border-radius: 10px; font: 15px system-ui, sans-serif; color: var(--ink); }
+  .heard .note { margin-top: 2px; }
+  .heard .note.bad { color: #c0392b; }
+  nav { display: flex; gap: 4px; padding: 12px 16px 0; border-bottom: 2px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 1; }
+  nav button { flex: 1; padding: 9px 4px; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--soft); font: 700 13px system-ui, sans-serif; cursor: pointer; }
+  nav button.on { color: var(--pink); border-bottom-color: var(--pink); }
+  main { padding: 6px 20px 28px; }
+  section { display: none; } section.on { display: block; }
+  h2 { margin: 18px 0 4px; font-size: 13px; color: var(--ink); }
+  .hint { margin: 0 0 8px; font-size: 12.5px; color: var(--soft); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 7px 13px; border: 2px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink); font: 600 14px system-ui, sans-serif; cursor: pointer; }
+  .chip.on { border-color: var(--pink); color: var(--pink); background: var(--pink-soft); }
+  .swatch { width: 34px; height: 34px; padding: 0; border: 2px solid var(--line); border-radius: 50%; cursor: pointer; }
+  .swatch.on { outline: 3px solid var(--pink); outline-offset: 2px; }
+  .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .action { padding: 14px 6px 12px; border: 2px solid var(--line); border-radius: 16px; background: var(--card); cursor: pointer; text-align: center; font: 600 13.5px system-ui, sans-serif; color: var(--ink); }
+  .action:hover { border-color: var(--pink); }
+  .action span { display: block; font-size: 26px; margin-bottom: 4px; }
+  .action small { display: block; margin-top: 2px; color: var(--soft); font-weight: 500; font-size: 11.5px; }
+  .cards { display: grid; gap: 8px; }
+  .card { text-align: left; padding: 10px 14px; border: 2px solid var(--line); border-radius: 14px; background: #fff; cursor: pointer; font: 14px system-ui, sans-serif; color: var(--ink); }
+  .card b { display: block; margin-bottom: 2px; }
+  .card small { color: var(--soft); }
+  .card.on { border-color: var(--pink); background: var(--pink-soft); }
+  .toggle { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid var(--line); border-radius: 14px; background: #fff; margin-top: 8px; }
+  .toggle small { display: block; color: var(--soft); }
+  .switch { position: relative; width: 46px; height: 26px; flex: none; border-radius: 999px; background: #ddd; border: 0; cursor: pointer; transition: background 0.2s; }
+  .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left 0.2s; }
+  .switch.on { background: var(--pink); } .switch.on::after { left: 23px; }
+  input, select { padding: 8px 12px; border: 2px solid var(--line); border-radius: 10px; font: 15px system-ui, sans-serif; color: var(--ink); background: #fff; }
+  .try { margin-top: 10px; }
+  .keys { line-height: 2; font-size: 14px; }
+  kbd { background: #fff; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 7px; font: 600 12.5px system-ui, sans-serif; }
+  code { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 13px; }
 </style>
 </head>
 <body>
-<h1>Personalizar a Claudia-chan</h1>
-<!-- Everything she can do, in one place: what used to be only shortcuts or /claudia commands. -->
-<div class="now">
-  <button class="mic" id="mic">🎤 Hablarle</button>
+<!-- Claudia's control panel: her state and voice on top, then everything she does in tabs. -->
+<header>
+  <img src="/assets/tray.png" alt="">
+  <div>
+    <h1 id="name">Claudia-chan</h1>
+    <div class="state"><span class="dot" id="dot"></span><span id="state">…</span></div>
+  </div>
+</header>
+<div class="talk">
+  <button class="mic" id="mic">🎤 Háblale</button>
   <div class="heard" id="heard"></div>
-  <div class="row actions">
-    <button data-send='{"type":"stroll"}'>🚶‍♀️ Pasear</button>
-    <button data-send='{"type":"dance"}'>💃 Bailar</button>
-    <button data-send='{"type":"doing","name":"kiss","seconds":1.8}'>💋 Beso</button>
-    <button data-send='{"type":"visible"}' id="visible">🙈 Ocultar</button>
-    <button data-send='{"type":"move"}'>✋ Moverla</button>
-    <button data-send='{"type":"close"}'>😴 Cerrar</button>
-  </div>
-  <div class="keys">
-    <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> hablarle (otra vez para terminar) ·
-    <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>H</kbd> ocultar/mostrar ·
-    <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>C</kbd> moverla con el cursor ·
-    caricia: pasa el cursor sobre su cabeza ·
-    en Claude Code: <kbd>/claudia help</kbd>
-  </div>
 </div>
-<div id="root"></div>
+<nav id="tabs">
+  <button data-tab="ahora" class="on">Ahora</button>
+  <button data-tab="look">Apariencia</button>
+  <button data-tab="voice">Personalidad y voz</button>
+  <button data-tab="life">Comportamiento</button>
+  <button data-tab="help">Ayuda</button>
+</nav>
+<main>
+  <section id="ahora" class="on">
+    <div class="actions">
+      <button class="action" data-send='{"type":"stroll"}'><span>🚶‍♀️</span>Pasear<small>cruza la pantalla</small></button>
+      <button class="action" data-send='{"type":"dance"}'><span>💃</span>Bailar<small>un ratito</small></button>
+      <button class="action" data-send='{"type":"doing","name":"kiss","seconds":1.8}'><span>💋</span>Beso<small>te lanza uno</small></button>
+      <button class="action" data-send='{"type":"visible"}' id="visible"><span>🙈</span>Ocultar<small>Ctrl+Alt+H</small></button>
+      <button class="action" data-send='{"type":"move"}'><span>✋</span>Moverla<small>sigue tu cursor; repite para soltarla</small></button>
+      <button class="action" data-send='{"type":"close"}'><span>😴</span>Cerrar<small>vuelve con /claudia on</small></button>
+    </div>
+    <h2>Llevarla a…</h2>
+    <div class="row" id="places"></div>
+  </section>
+  <section id="look"></section>
+  <section id="voice"></section>
+  <section id="life"></section>
+  <section id="help">
+    <h2>Atajos de teclado</h2>
+    <div class="keys">
+      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> hablarle (otra vez para terminar)<br>
+      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>H</kbd> ocultarla o mostrarla<br>
+      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>C</kbd> moverla con el cursor (otra vez para soltarla)<br>
+      Caricia: pasa el cursor de lado a lado sobre su cabeza
+    </div>
+    <h2>Cómo te responde</h2>
+    <p class="hint">Lo que le dices se transcribe en tu PC y lo contesta tu sesión de <code>claude-chan</code> (tu suscripción de Claude). Sin una sesión abierta y despierta, te escucha pero no te contesta: abre <code>claude-chan</code> en una terminal o escribe <code>/claudia on</code>.</p>
+    <h2>En Claude Code</h2>
+    <p class="hint"><code>/claudia help</code> lista todo · <code>/claudia on</code> / <code>off</code> · <code>/claudia baila</code> · <code>/claudia beso</code> · <code>/claudia panel</code></p>
+    <h2>Menú del ícono</h2>
+    <p class="hint">Junto al reloj, en la barra de arriba: clic en la carita de Claudia.</p>
+  </section>
+</main>
 <script>
 // Skin stays light by the owner's decision: never add dark tones here.
 const COLORS = {
-  piel: [['natural', null], ['nieve', '#fff4ef'], ['rosada', '#ffe3e0'], ['clara', '#f9e6d6'], ['durazno', '#f6dcc4']],
   pelo: [['natural', null], ['negro', '#2a2630'], ['rubio', '#f2d27a'], ['rosa', '#ff8fc0'], ['rojo', '#c8343c'], ['azul', '#4f8ff0'], ['morado', '#9a62e0'], ['plata', '#d8dde8']],
   ojos: [['natural', null], ['miel', '#c98a2e'], ['verde', '#3fae6b'], ['azul', '#3f8fe0'], ['violeta', '#9a55e0'], ['rojo', '#e03040']],
   ropa: [['natural', null], ['negra', '#30303a'], ['rosa', '#ff9cc8'], ['celeste', '#8fd0f5'], ['roja', '#d04048'], ['verde', '#5fb080']],
+  piel: [['natural', null], ['nieve', '#fff4ef'], ['rosada', '#ffe3e0'], ['clara', '#f9e6d6'], ['durazno', '#f6dcc4']],
 }
-const CHOICES = {
-  personalidad: ['yandere', 'tsundere', 'dulce', 'kuudere', 'onee-san'],
-  voz: ['kokoro', 'elevenlabs', 'espanol', 'japones'],
-  tono: ['grave', 'normal', 'agudo'],
-  velocidad: ['lenta', 'normal', 'rapida'],
-  tamano: ['chico', 'normal', 'grande'],
-  pasear: ['off', 'on'],
-  idioma: ['es', 'en', 'ru', 'pt', 'ja'],
-}
+const PERSONALITIES = [
+  ['yandere', 'Yandere', 'Dulce y demasiado atenta; celosa a lo anime.'],
+  ['tsundere', 'Tsundere', '"¡No lo hice por ti!", pero sí lo hizo por ti.'],
+  ['dulce', 'Dulce', 'Cariñosa y animada todo el tiempo.'],
+  ['kuudere', 'Kuudere', 'Tranquila y seca por fuera, tierna por dentro.'],
+  ['onee-san', 'Onee-san', 'La hermana mayor que te cuida y te molesta.'],
+]
+const VOICES = [
+  ['kokoro', 'Kokoro (recomendada)', 'Chica joven, acento latino. Gratis, en tu PC.'],
+  ['elevenlabs', 'ElevenLabs', 'La más expresiva. Necesita tu clave y gasta créditos.'],
+  ['espanol', 'Clásica japonesa', 'Voz japonesa antigua leyendo tu idioma.'],
+  ['japones', 'Japonés', 'Responde en japonés.'],
+]
+const LANGS = [['es', 'Español'], ['en', 'English'], ['pt', 'Português'], ['ru', 'Русский'], ['ja', '日本語']]
 const DEFAULTS = { personalidad: 'yandere', voz: 'kokoro', tono: 'normal', velocidad: 'normal', tamano: 'normal', pasear: 'on', idioma: 'es', modelo: 'vita' }
-const root = document.getElementById('root')
 const send = body => fetch('/event', { method: 'POST', headers: { 'x-claudia-chan': '1' }, body: JSON.stringify(body) })
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e }
 
+// Tabs
+document.querySelectorAll('#tabs button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#tabs button, main section').forEach(x => x.classList.remove('on'))
+    b.classList.add('on')
+    document.getElementById(b.dataset.tab).classList.add('on')
+  }
+})
 document.querySelectorAll('[data-send]').forEach(b => { b.onclick = () => send(JSON.parse(b.dataset.send)).then(poll) })
+
+// One choice from a list: chips, cards (with a description) or colour swatches.
+function pick(parent, title, hint, items, current, onPick, kind = 'chip') {
+  parent.append(el('h2', { textContent: title }))
+  if (hint) parent.append(el('p', { className: 'hint', textContent: hint }))
+  const box = el('div', { className: kind === 'card' ? 'cards' : 'row' })
+  for (const item of items) {
+    const [value, label = value, about = ''] = Array.isArray(item) ? item : [item]
+    const b = el('button', { className: kind })
+    if (kind === 'swatch') { b.style.background = label ?? '#fff'; b.title = value; if (label === null) b.textContent = '✕' }
+    else if (kind === 'card') b.append(el('b', { textContent: label }), el('small', { textContent: about }))
+    else b.textContent = label
+    if ((kind === 'swatch' ? label : value) === current) b.classList.add('on')
+    b.onclick = () => { box.querySelectorAll('button').forEach(x => x.classList.remove('on')); b.classList.add('on'); onPick(value, label) }
+    box.append(b)
+  }
+  parent.append(box)
+}
+
+function toggle(parent, title, about, isOn, onChange) {
+  const sw = el('button', { className: 'switch' + (isOn ? ' on' : '') })
+  sw.onclick = () => { sw.classList.toggle('on'); onChange(sw.classList.contains('on')) }
+  parent.append(el('div', { className: 'toggle' }, el('div', {}, el('b', { textContent: title }), el('small', { textContent: about })), sw))
+}
+
+const setting = (key, value) => send({ type: 'setting', key, value })
+
+Promise.all([fetch('/config.json').then(r => r.json()).catch(() => ({})), fetch('/models').then(r => r.json()).catch(() => [])]).then(([config, models]) => {
+  const get = key => config[key] ?? DEFAULTS[key]
+  document.getElementById('name').textContent = config.name ?? 'Claudia-chan'
+
+  // Ahora: places
+  const places = document.getElementById('places')
+  for (const [where, label] of [['top-left', '↖ arriba izq.'], ['top-right', '↗ arriba der.'], ['center', '● centro'], ['bottom-left', '↙ abajo izq.'], ['bottom-right', '↘ abajo der.']]) {
+    places.append(el('button', { className: 'chip', textContent: label, onclick: () => send({ type: 'place', where }) }))
+  }
+
+  // Apariencia
+  const look = document.getElementById('look')
+  look.append(el('h2', { textContent: 'Nombre' }))
+  const name = el('input', { value: config.name ?? 'Claudia-chan', maxLength: 24 })
+  name.onchange = () => { send({ type: 'name', value: name.value.trim() || 'Claudia-chan' }); document.getElementById('name').textContent = name.value }
+  look.append(name)
+  pick(look, 'Modelo', 'Otros personajes: pon un .vrm en assets/models.', models, get('modelo'), v => setting('modelo', v))
+  pick(look, 'Tamaño en pantalla', '', [['chico', 'Chica'], ['normal', 'Normal'], ['grande', 'Grande']], get('tamano'), v => setting('tamano', v))
+  for (const [part, list] of Object.entries(COLORS)) {
+    pick(look, { pelo: 'Pelo', ojos: 'Ojos', ropa: 'Ropa', piel: 'Piel' }[part], '', list, config[part] ?? null, (_, color) => send({ type: 'style', part, color }), 'swatch')
+  }
+
+  // Personalidad y voz
+  const voice = document.getElementById('voice')
+  pick(voice, 'Personalidad', 'Cómo te habla y cómo reacciona.', PERSONALITIES, get('personalidad'), v => setting('personalidad', v), 'card')
+  pick(voice, 'Voz', '', VOICES, get('voz'), v => setting('voz', v), 'card')
+  pick(voice, 'Tono', '', [['grave', 'Más grave'], ['normal', 'Normal'], ['agudo', 'Más agudo']], get('tono'), v => setting('tono', v))
+  pick(voice, 'Velocidad', '', [['lenta', 'Lenta'], ['normal', 'Normal'], ['rapida', 'Rápida']], get('velocidad'), v => setting('velocidad', v))
+  voice.append(el('button', { className: 'chip try', textContent: '🔊 Probar voz', onclick: () => send({ type: 'speak', natural: true, isSpanish: true, text: '¡Hola, amor! ¿Así te gusta cómo hablo?' }) }))
+  pick(voice, 'Idioma', 'En qué idioma te habla.', LANGS, get('idioma'), v => setting('idioma', v).then(() => location.reload()))
+
+  // Comportamiento
+  const life = document.getElementById('life')
+  toggle(life, 'Vida propia', 'Pasea por la pantalla, se sienta en tu ventana y a veces baila.', get('pasear') === 'on', on => setting('pasear', on ? 'on' : 'off'))
+  toggle(life, 'Sonido', 'Su voz y sus efectos.', !config.muted, on => send({ type: 'mute', value: !on }))
+  life.append(el('h2', { textContent: 'Horario de trabajo' }), el('p', { className: 'hint', textContent: 'Fuera de este horario te manda a descansar.' }))
+  const hours = config.hours
+  const from = el('select'), to = el('select')
+  for (const s of [from, to]) { s.append(el('option', { value: '', textContent: '—' })); for (let h = 0; h < 24; h++) s.append(el('option', { value: h, textContent: `${h}:00` })) }
+  from.value = hours?.from ?? ''; to.value = hours?.to ?? ''
+  const saveHours = () => send({ type: 'hours', value: from.value === '' || to.value === '' ? null : { from: Number(from.value), to: Number(to.value) } })
+  from.onchange = to.onchange = saveHours
+  life.append(el('div', { className: 'row' }, 'de ', from, ' a ', to))
+})
+
+// Her state, refreshed every second.
 const mic = document.getElementById('mic')
 mic.onclick = () => send({ type: 'listen' }).then(() => setTimeout(poll, 200))
-// The panel follows her state: listening or not, what she understood last, shown or hidden.
 async function poll() {
   const st = await fetch('/status').then(r => r.json()).catch(() => null)
-  if (!st) return
+  const dot = document.getElementById('dot'), state = document.getElementById('state')
+  if (!st) { dot.className = 'dot'; state.textContent = 'cerrada'; return }
   mic.classList.toggle('on', st.listening)
-  mic.textContent = st.listening ? '⏹ Terminar (te estoy escuchando…)' : '🎤 Hablarle'
+  mic.textContent = st.listening ? '⏹ Terminar · te estoy escuchando…' : '🎤 Háblale'
+  dot.className = 'dot ' + (st.listening ? 'live' : st.listener ? 'ok' : 'warn')
+  state.textContent = st.listening ? 'Escuchándote' : st.listener ? 'Lista para hablar contigo' : 'Te escucha, pero no hay sesión de claude-chan para contestarte'
   const heard = document.getElementById('heard')
   heard.innerHTML = ''
-  if (st.lastHeard) heard.append('Te entendí: ', Object.assign(document.createElement('b'), { textContent: `“${st.lastHeard}”` }))
-  // Where it went: answered by a session, still waiting, or nobody awake to answer.
-  const note = st.taker ? ` → se lo pasé a la sesión en ${st.taker}`
-    : st.waiting && !st.listener ? ' → ninguna sesión la está escuchando: abre claude-chan o escribe /claudia on'
-    : st.waiting ? ' → esperando a que Claude termine lo que está haciendo…' : ''
-  if (st.lastHeard && note) heard.append(Object.assign(document.createElement('div'), { textContent: note }))
-  document.getElementById('visible').textContent = st.visible ? '🙈 Ocultar' : '👀 Mostrar'
+  if (st.lastHeard) {
+    heard.append('Te entendí: ', el('b', { textContent: `“${st.lastHeard}”` }))
+    const note = st.taker ? `→ se lo pasé a tu sesión en ${st.taker}`
+      : st.waiting && !st.listener ? '→ nadie para contestarte: abre claude-chan o escribe /claudia on'
+      : st.waiting ? '→ esperando a que Claude termine lo que está haciendo…' : ''
+    if (note) heard.append(el('div', { className: 'note' + (st.waiting && !st.listener ? ' bad' : ''), textContent: note }))
+  }
+  const v = document.getElementById('visible')
+  v.innerHTML = ''
+  v.append(el('span', { textContent: st.visible ? '🙈' : '👀' }), st.visible ? 'Ocultar' : 'Mostrar', el('small', { textContent: 'Ctrl+Alt+H' }))
 }
 poll()
 setInterval(poll, 1000)
-
-function group(title, items, isOn, choose, isSwatch) {
-  const h = Object.assign(document.createElement('h2'), { textContent: title })
-  const row = Object.assign(document.createElement('div'), { className: 'row' })
-  for (const item of items) {
-    const b = document.createElement('button')
-    b.className = (isSwatch && item[1] ? 'swatch ' : '') + (isOn(item) ? 'on' : '')
-    if (isSwatch && item[1]) { b.style.background = item[1]; b.title = item[0] } else b.textContent = isSwatch ? item[0] : item
-    b.onclick = () => {
-      choose(item)
-      row.querySelectorAll('button').forEach(x => x.classList.remove('on'))
-      b.classList.add('on')
-    }
-    row.append(b)
-  }
-  root.append(h, row)
-}
-
-Promise.all([fetch('/config.json').then(r => r.json()).catch(() => ({})), fetch('/models').then(r => r.json()), fetch('/i18n.json').then(r => r.json())]).then(([config, models, i18n]) => {
-  const L = i18n[config.idioma ?? 'es'].panel
-  document.querySelector('h1').textContent = L.heading
-  const name = Object.assign(document.createElement('input'), { value: config.name ?? 'Claudia-chan', maxLength: 24 })
-  name.onchange = () => send({ type: 'name', value: name.value.trim() || 'Claudia-chan' })
-  root.append(Object.assign(document.createElement('h2'), { textContent: L.nombre }), name)
-  for (const [part, list] of Object.entries(COLORS)) {
-    group(L[part], list, ([, c]) => (config[part] ?? null) === c, ([, c]) => send({ type: 'style', part, color: c }), true)
-  }
-  for (const [key, list] of Object.entries({ ...CHOICES, modelo: models })) {
-    group(L[key], list, v => (config[key] ?? DEFAULTS[key]) === v, v => send({ type: 'setting', key, value: v }).then(() => { if (key === 'idioma') location.reload() }))
-  }
-  root.append(Object.assign(document.createElement('h2'), { textContent: L.lugar }))
-  const places = Object.assign(document.createElement('div'), { className: 'row' })
-  for (const where of ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center', 'cursor']) {
-    const b = Object.assign(document.createElement('button'), { textContent: L[where] })
-    b.onclick = () => send(where === 'cursor' ? { type: 'move' } : { type: 'place', where })
-    places.append(b)
-  }
-  root.append(places)
-})
 </script>
 </body>
 </html>
