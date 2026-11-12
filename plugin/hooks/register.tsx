@@ -269,7 +269,7 @@ const HAND_ALIAS: Record<string, string> = { piedra: 'piedra', papel: 'papel', t
 
 const helpText = (say: (typeof UI)[keyof typeof UI]) => [
   'Claudia-chan:',
-  '  /claudia on | off',
+  '  /claudia on | off  (off / cerrar: la cierra)',
   '  /claudia sonido on | off',
   '  /claudia nombre <...>',
   `  /claudia panel: ${say.h[0]}`,
@@ -553,12 +553,14 @@ async function isDismissed($: Engine) {
   }
 }
 
-async function launchAvatar($: Engine) {
+// `wake`: the person asked for her (new session, /claudia on), which overrides a "Cerrar".
+// A heartbeat relaunch does not pass it, so a closed Claudia stays closed.
+async function launchAvatar($: Engine, wake = false) {
   await $.process
     .run([
       'sh',
       '-c',
-      `cd "${avatarDir($)}" && $(command -v setsid) nohup "node_modules/electron/dist/$(cat node_modules/electron/path.txt)" . --no-sandbox >/dev/null 2>&1 &`,
+      `cd "${avatarDir($)}" && $(command -v setsid) nohup "node_modules/electron/dist/$(cat node_modules/electron/path.txt)" . --no-sandbox${wake ? ' --wake' : ''} >/dev/null 2>&1 &`,
     ])
     .catch(() => undefined)
 }
@@ -629,7 +631,7 @@ export const register: Register = on => {
     if ((await read($, heart)).isOn) {
       void $.ui.open({ id: PANE, title: 'Claudia-chan' })
       // Scripts running `claude -p` must not spawn a window.
-      if (e.isInteractive) await launchAvatar($)
+      if (e.isInteractive) await launchAvatar($, true)
     }
     await paint($)
     await tell($, { type: 'react', name: 'feliz', sound: 'saludo', seconds: 3 })
@@ -743,14 +745,18 @@ export const register: Register = on => {
 
       return { text: answer?.ok ? `Sonido ${value}.` : say.closed }
     }
-    if (what !== 'on' && what !== 'off') return { text: helpText(say) }
+    // cerrar / salir / exit mean off: she sleeps here and her window closes.
+    const turn = ['cerrar', 'salir', 'exit', 'close', 'stop'].includes(what) ? 'off' : what
+    if (turn !== 'on' && turn !== 'off') return { text: helpText(say) }
 
-    await update($, heart, old => ({ ...old, isOn: what === 'on', jealousy: 0, love: 0 }))
+    await update($, heart, old => ({ ...old, isOn: turn === 'on', jealousy: 0, love: 0 }))
     const isOn = (await read($, heart)).isOn
     await $.store.set('asleep', !isOn)
     if (isOn) {
       await $.ui.open({ id: PANE, title: 'Claudia-chan' })
-      await launchAvatar($)
+      await launchAvatar($, true)
+    } else {
+      await tell($, { type: 'close' })
     }
     await paint($)
 

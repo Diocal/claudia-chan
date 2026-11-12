@@ -549,6 +549,11 @@ async function handle(req, res) {
         res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ text: heard.shift() ?? '' }))
         return
       }
+      if (event.type === 'close') {
+        res.writeHead(204).end()
+        dismiss()
+        return
+      }
       if (event.type === 'stroll') {
         stroll()
         res.writeHead(204).end()
@@ -685,7 +690,12 @@ function createWindow() {
 app.commandLine.appendSwitch('enable-transparent-visuals')
 app.whenReady().then(() => {
   app.dock?.hide()
-  // Whoever started her wants her: a previous "Cerrar" no longer applies.
+  // Closed with "Cerrar" or /claudia off: only a deliberate start (--wake: a new session, /claudia on,
+  // run.sh) brings her back, never a heartbeat relaunch from some other session.
+  if (readConfig().dismissed === true && !process.argv.includes('--wake')) {
+    app.exit(0)
+    return
+  }
   saveConfig({ dismissed: false })
   http.createServer(handle).on('error', () => app.exit(1)).listen(PORT, '127.0.0.1', () => {
     createWindow()
