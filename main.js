@@ -3,6 +3,8 @@ const { app, BrowserWindow, globalShortcut, Menu, nativeImage, screen, Tray } = 
 const { spawn, execFile } = require('child_process')
 const os = require('os')
 const http = require('http')
+const https = require('https')
+const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
 const { createPetDetector } = require('./pet.js')
@@ -536,6 +538,9 @@ function readBody(req) {
 }
 
 async function handle(req, res) {
+  // The VR page cannot put headers on its event stream: the key in the link authorizes it instead.
+  const vrKey = readConfig().vrKey
+  if (vrKey && new URL(req.url, 'http://x').searchParams.get('k') === vrKey) req.headers['x-claudia-chan'] = '1'
   if (req.method === 'POST' && req.url === '/event') {
     // The custom header makes a browser preflight, so web pages cannot post here.
     if (req.headers['x-claudia-chan'] !== '1') {
@@ -628,6 +633,13 @@ async function handle(req, res) {
         res.writeHead(204).end()
         return
       }
+      if (event.type === 'setting' && event.key === 'vr') {
+        saveConfig({ vr: event.value === 'on' ? 'on' : 'off' })
+        if (event.value === 'on') startVr()
+        else stopVr()
+        res.writeHead(204).end()
+        return
+      }
       if (event.type === 'setting') {
         const isValid = event.key === 'modelo' ? modelNames().includes(event.value) : SETTINGS[event.key]?.includes(event.value)
         if (!isValid) {
@@ -666,11 +678,39 @@ async function handle(req, res) {
 
   const urlPath = req.url.split('?')[0]
   // Motion-capture files the user downloaded (assets/animations/*.fbx or .glb).
+  if (urlPath === '/stream' && req.headers['x-claudia-chan'] === '1') {
+    res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' })
+    res.write(`data: ${JSON.stringify({ type: 'hello' })}\n\n`)
+    streams.add(res)
+    const ping = setInterval(() => res.write(': ping\n\n'), 20000)
+    req.on('close', () => {
+      clearInterval(ping)
+      streams.delete(res)
+    })
+    return
+  }
+  if (urlPath === '/audio' && req.method === 'POST' && req.headers['x-claudia-chan'] === '1') {
+    const text = await hearUpload(req).catch(() => '')
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ text }))
+    return
+  }
+  if (urlPath === '/vr') {
+    // Opened on this PC (loopback) without the key: hand it the key, so the page can talk to the app.
+    const isLocal = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)
+    if (isLocal && !new URL(req.url, 'http://x').searchParams.get('k')) {
+      let key = readConfig().vrKey
+      if (!key) saveConfig({ vrKey: (key = crypto.randomBytes(12).toString('hex')) })
+      res.writeHead(302, { location: `/vr?k=${key}` }).end()
+      return
+    }
+    res.writeHead(200, { 'content-type': 'text/html' }).end(fs.readFileSync(path.join(__dirname, 'vr.html')))
+    return
+  }
   if (urlPath === '/status') {
     res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
       listening: Boolean(recorder), lastHeard, waiting: heard.length, heardAt, taker: lastTaker?.place ?? null,
       // A session that is awake heartbeats every 10 s; none for a while means nobody will answer.
-      listener: Date.now() - lastSessionBeat < 25000, visible: alive() && win.isVisible(), doing: life.mode, voice: naturalEngine(readConfig()) ?? 'open-jtalk',
+      listener: Date.now() - lastSessionBeat < 25000, vr: vrUrl(), visible: alive() && win.isVisible(), doing: life.mode, voice: naturalEngine(readConfig()) ?? 'open-jtalk',
     }))
     return
   }
@@ -693,6 +733,90 @@ async function handle(req, res) {
   fs.createReadStream(file).pipe(res)
 }
 
+// --- VR: the same Claudia in a headset (vr.html, WebXR). Every event the desktop avatar gets also goes
+// to open VR pages through a server-sent stream (/stream). Headsets reach the PC through an opt-in HTTPS
+// port on the LAN (WebXR and the mic need a secure page), guarded by a key and limited to VR files.
+const VR_PORT = 8972
+const streams = new Set()
+function broadcast(event) {
+  if (!streams.size || event?.type === 'cursor') return
+  const data = `data: ${JSON.stringify(event)}\n\n`
+  for (const res of streams) res.write(data)
+}
+
+const lanAddress = () =>
+  Object.values(os.networkInterfaces()).flat().find(i => i && i.family === 'IPv4' && !i.internal)?.address ?? '127.0.0.1'
+
+// Static files a headset may load without the key; everything else needs ?k= (or the header).
+const VR_PUBLIC = [/^\/vr(\.html|\.js)?$/, /^\/(mixamo|activities|style)\.js$/, /^\/node_modules\/(three|@pixiv)\//, /^\/assets\//, /^\/(config|i18n)\.json$/, /^\/(models|animations)$/]
+let vrServer = null
+function vrUrl() {
+  const { vrKey } = readConfig()
+  return vrServer && vrKey ? `https://${lanAddress()}:${VR_PORT}/vr?k=${vrKey}` : null
+}
+
+function startVr() {
+  if (vrServer) return
+  let { vrKey } = readConfig()
+  if (!vrKey) saveConfig({ vrKey: (vrKey = crypto.randomBytes(12).toString('hex')) })
+  // A self-signed certificate made once (the headset asks to trust it the first time).
+  const dir = path.join(os.homedir(), '.config/claudia-chan')
+  const key = path.join(dir, 'vr-key.pem'), cert = path.join(dir, 'vr-cert.pem')
+  try {
+    if (!fs.existsSync(cert)) {
+      fs.mkdirSync(dir, { recursive: true })
+      execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', cert, '-days', '3650', '-subj', '/CN=claudia-chan', '-addext', `subjectAltName=IP:${lanAddress()},DNS:localhost`], { stdio: 'ignore' })
+    }
+  } catch (error) {
+    console.error('vr: no certificate (openssl missing?)', error.message)
+    return
+  }
+  vrServer = https.createServer({ key: fs.readFileSync(key), cert: fs.readFileSync(cert) }, (req, res) => {
+    const url = new URL(req.url, 'https://x')
+    const ok = url.searchParams.get('k') === vrKey || req.headers['x-claudia-key'] === vrKey
+    if (!ok && !(req.method === 'GET' && VR_PUBLIC.some(re => re.test(url.pathname)))) {
+      res.writeHead(403).end()
+      return
+    }
+    // The VR page sends the key with its own calls; past the check it is handled like a local request.
+    if (ok) req.headers['x-claudia-chan'] = '1'
+    handle(req, res)
+  })
+  vrServer.on('error', error => {
+    console.error('vr server', error.message)
+    vrServer = null
+  })
+  vrServer.listen(VR_PORT, '0.0.0.0')
+}
+
+function stopVr() {
+  vrServer?.close()
+  vrServer = null
+  for (const res of streams) res.end()
+  streams.clear()
+}
+
+// Speech recorded by the headset (webm/ogg/wav): to 16 kHz wav, then the same path as the desktop mic.
+async function hearUpload(req) {
+  const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'claudia-vrmic-'))
+  const input = path.join(folder, 'in'), file = path.join(folder, 'mic.wav')
+  const chunks = []
+  for await (const chunk of req) chunks.push(chunk)
+  fs.writeFileSync(input, Buffer.concat(chunks))
+  try {
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', input, '-ac', '1', '-ar', '16000', file])
+    const text = await transcribe(file)
+    if (text) heard.push(text)
+    lastHeard = text || '(no te entendí)'
+    heardAt = Date.now()
+    lastTaker = null
+    show({ type: 'heard', text })
+    return text
+  } finally {
+    fs.rmSync(folder, { recursive: true, force: true })
+  }
+}
+
 function openAvatar(area) {
   win = new BrowserWindow({
     width: WIDTH,
@@ -707,6 +831,12 @@ function openAvatar(area) {
     backgroundColor: '#00000000',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), autoplayPolicy: 'no-user-gesture-required' },
   })
+  // Whatever the desktop avatar is told, open VR pages are told too.
+  const sendToAvatar = win.webContents.send.bind(win.webContents)
+  win.webContents.send = (channel, event) => {
+    sendToAvatar(channel, event)
+    broadcast(event)
+  }
   win.setAlwaysOnTop(true, 'screen-saver')
   win.setVisibleOnAllWorkspaces(true)
   win.setIgnoreMouseEvents(true)
@@ -764,6 +894,7 @@ app.whenReady().then(() => {
   http.createServer(handle).on('error', () => app.exit(1)).listen(PORT, '127.0.0.1', () => {
     createWindow()
     setupTray()
+    if (readConfig().vr === 'on') startVr()
   })
   console.log('move shortcut registered:', globalShortcut.register(MOVE_KEY, toggleMove))
   console.log('listen shortcut registered:', globalShortcut.register(LISTEN_KEY, toggleListen))

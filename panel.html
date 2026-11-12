@@ -203,6 +203,9 @@ Promise.all([fetch('/config.json').then(r => r.json()).catch(() => ({})), fetch(
 
   // Comportamiento
   const life = document.getElementById('life')
+  // VR: her in a headset (Quest and other WebXR headsets on the same WiFi).
+  toggle(life, 'Verla en VR / realidad mixta', 'Abre un acceso seguro en tu WiFi para tus gafas (con una clave en el enlace).', config.vr === 'on', on => setting('vr', on ? 'on' : 'off').then(poll))
+  life.append(el('p', { className: 'hint', id: 'vrlink' }))
   toggle(life, 'Vida propia', 'Pasea por la pantalla, se sienta en tu ventana y a veces baila.', get('pasear') === 'on', on => setting('pasear', on ? 'on' : 'off'))
   toggle(life, 'Sonido', 'Su voz y sus efectos.', !config.muted, on => send({ type: 'mute', value: !on }))
   life.append(el('h2', { textContent: 'Horario de trabajo' }), el('p', { className: 'hint', textContent: 'Fuera de este horario te manda a descansar.' }))
@@ -234,6 +237,11 @@ async function poll() {
       : st.waiting && !st.listener ? '→ nadie para contestarte: abre claude-chan o escribe /claudia on'
       : st.waiting ? '→ esperando a que Claude termine lo que está haciendo…' : ''
     if (note) heard.append(el('div', { className: 'note' + (st.waiting && !st.listener ? ' bad' : ''), textContent: note }))
+  }
+  const link = document.getElementById('vrlink')
+  if (link) {
+    link.innerHTML = ''
+    if (st.vr) link.append('En el navegador de tus gafas abre: ', el('b', { textContent: st.vr }), el('br'), 'La primera vez dirá que la conexión no es privada: elige "Avanzado" → "Continuar".')
   }
   const v = document.getElementById('visible')
   v.innerHTML = ''

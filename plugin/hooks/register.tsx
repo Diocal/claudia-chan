@@ -769,6 +769,8 @@ export const register: Register = on => {
       lastPrompt = Date.now()
       nextTalk ||= lastPrompt + 6 * 60000
       await tell($, { type: 'activity' })
+      // For the VR panel: what you asked, and (at turn.complete) what she answered.
+      await tell($, { type: 'asked', text: e.text.slice(0, 500) })
       // She turns to listen to you before getting to work.
       await tell($, { type: 'doing', name: 'listening', seconds: 3 })
       await beat($, isInteractive)
@@ -853,6 +855,7 @@ export const register: Register = on => {
       })
       await paint($)
       const line = firstSentence(e.answer)
+      await tell($, { type: 'said', text: (e.answer ?? '').slice(0, 1500) })
       // Done: a little cheer (or a kiss if she sent you one), then she goes back to idling.
       await tell($, /beso|bes(it)?o|kiss|mwah|chu~|💋|😘/i.test(e.answer ?? '') ? { type: 'doing', name: 'kiss', seconds: 1.8 } : { type: 'doing', name: 'celebrate', seconds: 2 })
       await tell($, { type: 'react', name: 'feliz', sound: line ? undefined : 'listo', seconds: 3, line: line || undefined })
