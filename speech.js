@@ -3,8 +3,9 @@ const { execFile } = require('child_process')
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
+const { VENDOR, FFMPEG, venvPython } = require('./paths.js')
 
-const ROOT = path.join(__dirname, 'vendor')
+const ROOT = VENDOR
 const BINARY = path.join(ROOT, 'root/usr/bin/open_jtalk')
 const LIBS = path.join(ROOT, 'root/usr/lib/x86_64-linux-gnu')
 const DICTIONARY = path.join(ROOT, 'root/var/lib/mecab/dic/open-jtalk/naist-jdic')
@@ -36,9 +37,9 @@ async function synthesize(text, voice, { tono, velocidad } = {}) {
 
 
 // --- Natural voices: Kokoro (local, free, the default) and ElevenLabs (optional, needs a key).
-// Kokoro runs vendor/kokoro (setup.sh); ElevenLabs reads ELEVENLABS_API_KEY or ~/.config/claudia-chan/elevenlabs.key.
-// A venv's Python: Scripts\python.exe on Windows, bin/python elsewhere.
-const KOKORO_PYTHON = path.join(ROOT, 'kokoro', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python')
+// Kokoro runs vendor/kokoro (setup.sh, or the installed app's first start); ElevenLabs reads
+// ELEVENLABS_API_KEY or ~/.config/claudia-chan/elevenlabs.key.
+const KOKORO_PYTHON = venvPython('kokoro')
 // Spanish is read with the Latin American accent (seseo), not Castilian.
 const KOKORO_LANG = { es: 'es-419', en: 'en-us', pt: 'pt-br', ja: 'ja' }
 const KOKORO_SPEED = { lenta: 0.88, normal: 1.0, rapida: 1.15 }
@@ -82,14 +83,14 @@ async function kokoro(text, { idioma = 'es', velocidad, vozKokoro, tono } = {}) 
     const output = path.join(folder, 'out.wav')
     await new Promise((resolve, reject) => {
       const child = execFile(KOKORO_PYTHON, [path.join(__dirname, 'tts_kokoro.py'), vozKokoro || KOKORO_VOICE[idioma] || 'ef_dora', KOKORO_LANG[idioma], String(KOKORO_SPEED[velocidad] ?? 1), output],
-        { timeout: 60000 }, error => (error ? reject(error) : resolve()))
+        { timeout: 60000, env: { ...process.env, CLAUDIA_KOKORO_MODEL: path.join(ROOT, 'kokoro/model') } }, error => (error ? reject(error) : resolve()))
       child.stdin.end(text)
     })
     const pitch = KOKORO_PITCH[tono] ?? KOKORO_PITCH.normal
     if (pitch === 1) return await fs.promises.readFile(output)
     const younger = path.join(folder, 'young.wav')
     await new Promise((resolve, reject) => {
-      execFile('ffmpeg', ['-v', 'error', '-y', '-i', output, '-af', `asetrate=24000*${pitch},aresample=24000,atempo=1/${pitch}`, younger],
+      execFile(FFMPEG, ['-v', 'error', '-y', '-i', output, '-af', `asetrate=24000*${pitch},aresample=24000,atempo=1/${pitch}`, younger],
         { timeout: 15000 }, error => (error ? reject(error) : resolve()))
     })
     return await fs.promises.readFile(younger)

@@ -11,3 +11,8 @@ assets/models/avatarsample-a.vrm
 # Mixamo animations: each user downloads their own (Mixamo terms do not allow redistributing the files)
 assets/animations/*.fbx
 assets/animations/*.glb
+reminders.json
+
+# Installer builds
+dist/
+build/uv/
