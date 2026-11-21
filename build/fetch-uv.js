@@ -26,7 +26,8 @@ const archive = `uv-${target}.${windows ? 'zip' : 'tar.gz'}`
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'uv-'))
 const file = path.join(work, archive)
 execFileSync('curl', ['-fsSL', '-o', file, `https://github.com/astral-sh/uv/releases/download/${VERSION}/${archive}`], { stdio: 'inherit' })
-if (windows) execFileSync('powershell', ['-NoProfile', '-Command', `Expand-Archive -Force -LiteralPath '${file}' -DestinationPath '${work}'`], { stdio: 'inherit' })
+// Windows' own bsdtar reads zips; Expand-Archive breaks when PowerShell 7 shadows the 5.1 module.
+if (windows) execFileSync(path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe'), ['-xf', file, '-C', work], { stdio: 'inherit' })
 else execFileSync('tar', ['-xzf', file, '-C', work], { stdio: 'inherit' })
 const found = [path.join(work, windows ? 'uv.exe' : 'uv'), path.join(work, `uv-${target}`, 'uv')].find(f => fs.existsSync(f))
 if (!found) throw new Error('uv binary not found in the archive')
