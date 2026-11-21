@@ -158,6 +158,22 @@ export const ACTIVITIES = {
       bounce: Math.abs(s(b * 2)) * 0.035, snappy: true,
     }
   },
+  // Idle: a slow look to one side, then the other, and back (4 s). The eyes get there first (avatar.js).
+  lookAround: (t, _arg, since = 0) => {
+    const ease = Math.min(1, since / 0.6, Math.max(0, 4 - since) / 0.6)
+    const yaw = 0.35 * s(since * Math.PI / 2) * ease * ease * (3 - 2 * ease)
+    return { head: [0, yaw, 0], spine: [0, yaw * 0.3, 0] }
+  },
+  // Idle: swaying on the spot, as if to a song in her head.
+  sway: t => ({
+    spine: [0, 0, s(t * 5) * 0.03], hips: [0, 0, s(t * 5) * 0.03], bounce: 0,
+  }),
+  // Idle: a yawn (2.8 s), head back, mouth open, eyes shut. `mouth` and `eyes` are for her face, not bones.
+  // Hands-free on purpose: a hand over the mouth would have to fit models with different arm lengths.
+  yawn: (t, _arg, since = 0) => {
+    const e = s(Math.PI * Math.min(1, since / 2.8))
+    return { head: [-0.15 * e, 0, 0], chest: [-0.05 * e, 0, 0], mouth: 0.7 * e, eyes: e }
+  },
   // Late at night: head drooping.
   sleepy: t => ({
     head: [0.35 + s(t * 0.8) * 0.06, 0, 0.18], spine: [0.1, 0, 0],

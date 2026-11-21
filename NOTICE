@@ -9,7 +9,9 @@ these notices and credit "Claudia-chan by Dio Calderon". Commercial use needs wr
 permission from the author.
 
 Third-party parts, under their own licenses:
-- VRM models vita, hairsample-female, darkness-shibu: CC0. VRM sample model: pixiv.
+- VRM models vita, hairsample-female, darkness-shibu, sendagaya-shino, victoria-rubin:
+  VRoid Studio beta sample models by pixiv Inc. (VRoid project), CC0 (stated in each
+  file's VRM meta). VRM sample model (assets/sample.vrm): pixiv.
 - Kokoro-82M voice model (Apache-2.0), used through kokoro-onnx.
 - Open JTalk and the Mei voice from MMDAgent (Nagoya Institute of Technology, CC BY 3.0).
 - Whisper models (MIT) through faster-whisper.

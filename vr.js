@@ -192,14 +192,29 @@ const floaters = []
 // --- voice out: the PC sends her speech as audio
 const audio = new AudioContext()
 let speechEnds = Promise.resolve()
+// The same mute as on the desktop: nothing plays, and what was playing is cut.
+let muted = Boolean(config.muted)
+let current = null
+// Bumped whenever she is cut off (mute, quiet mode): pieces still decoding or waiting their turn are dropped.
+let speechTurn = 0
+function cutSpeech() {
+  speechTurn++
+  try { current?.stop() } catch {}
+  speakUntil = 0
+}
 async function play(base64, queue) {
+  if (muted) return
+  const turn = speechTurn
   if (audio.state === 'suspended') await audio.resume()
   const buffer = await audio.decodeAudioData(Uint8Array.from(atob(base64), c => c.charCodeAt(0)).buffer)
   if (queue) await speechEnds
+  // Cut off while this piece was decoding or waiting its turn.
+  if (muted || turn !== speechTurn) return
   const source = audio.createBufferSource()
   source.buffer = buffer
   source.connect(audio.destination)
   speechEnds = new Promise(resolve => { source.onended = resolve })
+  current = source
   source.start()
   speakUntil = clock.elapsedTime + buffer.duration
 }
@@ -218,6 +233,17 @@ function connect() {
     else if (e.type === 'said') { sheSaid = e.text; drawSpace() }
     else if (e.type === 'asked') { youSaid = e.text; drawSpace() }
     else if (e.type === 'pet') hearts()
+    else if (e.type === 'mute') {
+      muted = Boolean(e.value)
+      cutSpeech()
+    }
+    // Quiet mode starts: the same silence as on the desktop, at once; her line goes to the bubble.
+    else if (e.type === 'quiet') {
+      if (e.until && e.acted) cutSpeech()
+      say(e.line)
+    }
+    // Muted, the PC sends only how long her lips should move.
+    else if (e.type === 'mouth') speakUntil = clock.elapsedTime + e.seconds
     else if (MOODS[e.mood]) { mood = e.mood; say(e.line) }
     else if (e.line) say(e.line)
   }

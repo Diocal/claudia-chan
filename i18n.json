@@ -35,6 +35,258 @@
       "bottom-right": "Abajo derecha",
       "center": "Centro",
       "cursor": "Mover con el cursor"
+    },
+    "tools": {
+      "stay": "Quieta / pasear",
+      "menu": "Menú",
+      "drag": "Arrastrar",
+      "mute": "Silenciar",
+      "unmute": "Activar sonido",
+      "talk": "Hablarle",
+      "tour": "Mis botones nuevos: 🌙 no molestar, 👁 me oculta y 🎮 para jugar.",
+      "quiet": "No molestar",
+      "quietOff": "Que vuelva a hablar",
+      "hide": "Ocultarme",
+      "games": "Jugar"
+    },
+    "nolistener": "Te escucho, pero no hay sesión de claude-chan abierta para contestarte.",
+    "nomic": "No pude abrir el micrófono. ¿Está instalado ffmpeg?",
+    "quietOn": "Vale, me quedo calladita {m} min. Aquí estoy.",
+    "quietAbout": "Calladita un rato: sin comentarios, sin voz, sin avisos.",
+    "quietUntil": "Hasta las {t}. Háblale por el micrófono y vuelve a hablar.",
+    "lectura": {
+      "title": "Lectura",
+      "about": "Qué lee en voz alta de sus respuestas.",
+      "todo": "Todo",
+      "resumen": "Resumen",
+      "burbuja": "Solo burbuja"
+    },
+    "back": [
+      "¡Volviste!",
+      "Ahí estás. Te guardé el sitio.",
+      "¡Hola otra vez! Me alegra verte."
+    ],
+    "done": "Ya terminé. Tardé {m} minutos.",
+    "doneBack": "Volviste. Terminé hace {m} min: {line}",
+    "doneNote": "Listo",
+    "reminder": "¡{text}! Me pediste que te avisara.",
+    "reminderLate": "Se me pasó la hora, perdón: {text}",
+    "reminderList": "Recordatorios",
+    "hideHow": "Me escondo. Para traerme de vuelta: icono junto al reloj → Mostrar, o {key}.",
+    "games": {
+      "pick": "¿A qué jugamos?",
+      "names": {
+        "ppt": "Piedra, papel o tijera",
+        "corazones": "Atrapa los corazones",
+        "reflejos": "Reflejos",
+        "numero": "Adivina el número"
+      },
+      "how": {
+        "ppt": "Elige tu mano. Yo cuento y enseño la mía.",
+        "corazones": "Tienes 30 segundos: haz clic en los corazones y estrellas antes de que se apaguen.",
+        "reflejos": "Espera mi «¡ya!» y haz clic lo más rápido que puedas.",
+        "numero": "Pensé un número del 1 al 20. Toca uno y te digo si es más alto o más bajo."
+      },
+      "propose": "¿Jugamos mientras esperas? 🎮",
+      "doneChip": "✔ Claude terminó",
+      "again": "Otra vez",
+      "menu": "Juegos",
+      "close": "Cerrar",
+      "start": "Empezar",
+      "score": "Tú {me} · Yo {her}",
+      "points": "{n} pts",
+      "combo": "Racha ×{n}",
+      "best": "Mejor: {n}",
+      "ms": "{n} ms",
+      "tries": "Intentos: {n}",
+      "offer": "Proponer juegos",
+      "offerAbout": "Si Claude lleva más de un minuto trabajando y acercas el cursor, te propone jugar (una vez por tarea).",
+      "ppt": {
+        "count": [
+          "Piedra…",
+          "papel…",
+          "¡tijera!"
+        ],
+        "win": [
+          "Ganaste. Esta vez.",
+          "Hmph. Pura suerte."
+        ],
+        "lose": [
+          "¡Gané yo!",
+          "Ja, te leí la mano."
+        ],
+        "tie": [
+          "Empate. Otra.",
+          "Pensamos igual."
+        ]
+      },
+      "hearts": {
+        "start": "¡Atrápalos todos!",
+        "streak": [
+          "¡Racha de {n}!",
+          "¡Así, así! Van {n} seguidos."
+        ],
+        "miss": [
+          "Uy, se te escapó.",
+          "¡Ese se apagó!"
+        ],
+        "end": [
+          "Tiempo. {n} puntos, nada mal.",
+          "{n} puntos. La próxima, más."
+        ],
+        "record": [
+          "¡{n} puntos! Nuevo récord.",
+          "¡Récord! {n} puntos."
+        ]
+      },
+      "reflex": {
+        "wait": "Espera…",
+        "go": "¡YA!",
+        "early": [
+          "¡Todavía no! Sin trampas.",
+          "Qué ansias… espera mi señal."
+        ],
+        "fast": [
+          "Qué manos tan rápidas.",
+          "¿Tomaste café? Rapidísimo."
+        ],
+        "ok": [
+          "Bien, pero puedes más.",
+          "Nada mal. Otra."
+        ],
+        "slow": [
+          "¿Te dormiste?",
+          "Uy, qué lentitud. Otra vez."
+        ],
+        "record": [
+          "¡Tu mejor tiempo!",
+          "¡Nuevo récord!"
+        ]
+      },
+      "number": {
+        "start": "Ya lo pensé. ¿Cuál es?",
+        "higher": "Más alto.",
+        "lower": "Más bajo.",
+        "quick": [
+          "¿En {n}? ¿Me leíste la mente?",
+          "Hmph, {n} intentos. Qué suerte."
+        ],
+        "fair": [
+          "¡Ese era! En {n} intentos.",
+          "Correcto. {n} intentos, nada mal."
+        ],
+        "slow": [
+          "Por fin… {n} intentos. Esta la gané yo.",
+          "{n} intentos. Te tuve dando vueltas."
+        ]
+      },
+      "flavor": {
+        "yandere": {
+          "won": [
+            "Ganaste… pero con Copilot no juegas así, ¿verdad?"
+          ],
+          "lost": [
+            "Gané. ¿Otra?"
+          ]
+        },
+        "tsundere": {
+          "won": [
+            "N-no es que te haya dejado ganar, ¿eh?"
+          ],
+          "lost": [
+            "¡Ja! Y no creas que me divertí. Bueno, un poco."
+          ]
+        },
+        "dulce": {
+          "won": [
+            "¡Ganaste! Qué bien juegas."
+          ],
+          "lost": [
+            "Gané yo, pero jugaste muy bien."
+          ]
+        },
+        "kuudere": {
+          "won": [
+            "Ganaste. Anotado."
+          ],
+          "lost": [
+            "Gané. Era lo esperable."
+          ]
+        },
+        "onee-san": {
+          "won": [
+            "Ara ara, me ganaste. Muy bien."
+          ],
+          "lost": [
+            "Ara, gané yo. ¿Quieres la revancha?"
+          ]
+        },
+        "genki": {
+          "won": [
+            "¡Ganaste! ¡Otra, otra, otra!"
+          ],
+          "lost": [
+            "¡Gané yo! ¡Pero qué partidaza, vamos por otra!"
+          ]
+        },
+        "dandere": {
+          "won": [
+            "G-ganaste… qué bien. Me alegro."
+          ],
+          "lost": [
+            "Ah… gané. P-perdón."
+          ]
+        },
+        "himedere": {
+          "won": [
+            "Te concedo esta victoria. Agradécemelo."
+          ],
+          "lost": [
+            "Ohoho, la corona no pierde. Aplaude."
+          ]
+        },
+        "gamer": {
+          "won": [
+            "GG. Bien jugado… quiero la revancha."
+          ],
+          "lost": [
+            "GG EZ. ¿Otra, o te da miedo?"
+          ]
+        },
+        "chuunibyou": {
+          "won": [
+            "¡Imposible! ¿Rompiste mi sello? …Bien jugado."
+          ],
+          "lost": [
+            "¡Contempla mi poder oscuro! …Es decir, gané."
+          ]
+        }
+      }
+    },
+    "personalities": {
+      "title": "Personalidad",
+      "about": "Cómo te habla y cómo reacciona.",
+      "yandere": "Dulce y demasiado atenta; celosa a lo anime.",
+      "tsundere": "\"¡No lo hice por ti!\", pero sí lo hizo por ti.",
+      "dulce": "Cariñosa y animada todo el tiempo.",
+      "kuudere": "Tranquila y seca por fuera, tierna por dentro.",
+      "onee-san": "La hermana mayor que te cuida y te molesta.",
+      "genki": "Energía sin fin: tu porrista personal. Baila más.",
+      "dandere": "Tímida y callada; se suelta poco a poco.",
+      "himedere": "Una princesa que espera trato de realeza.",
+      "gamer": "Competitiva: los bugs son jefes y quiere la revancha.",
+      "chuunibyou": "Poderes oscuros imaginarios, arreglos muy reales."
+    },
+    "carryHint": "¡Eh! Llévame donde quieras… pero si me sacudes mucho, me mareo.",
+    "help": {
+      "mute": "silenciarla o devolverle el sonido",
+      "buttons": "Sus botones (acerca el cursor): 📌 quieta o paseando · ☰ este panel · ✋ arrastrarla (si la sacudes mucho, se marea) · 🔊 silenciarla · 🎤 hablarle · 🌙 no molestar 1 hora (otra vez para terminar) · 👁 ocultarla · 🎮 juegos",
+      "presenceTitle": "Cuando te vas y vuelves",
+      "presence": "Si dejas la computadora unos minutos se adormece, y al volver se estira y te saluda. Si una tarea larga termina mientras no estás, deja un ✔ en su burbuja y una notificación, y te lo cuenta cuando regresas. Para saber si estás, solo lee cuánto tiempo llevas sin tocar el teclado o el ratón. Lo único más que lee es la posición y el tamaño de la ventana activa, para sentarse encima: nunca su título ni su contenido, ni tu pantalla.",
+      "remindersTitle": "Recordatorios",
+      "reminders": "Dile o escríbele «recuérdame en 20 minutos sacar la ropa» (o «a las 17:30…», o «mañana a las 9…»). A la hora viene al centro, te saluda, lo muestra en su burbuja y lo dice con su voz local; si está oculta o no estás, llega además una notificación. Funcionan aunque esté en «no molestar», porque tú los pediste. Sin pasar por Claude: `/claudia recuerdame 20 sacar la ropa` o `/claudia recuerdame 17:30 llamar a mamá` · `/claudia recordatorios` · `/claudia recordatorio borrar 2`. Se listan en la pestaña Ahora. Si cierras Claude con uno a menos de tres horas, ella espera oculta y vuelve para avisarte; uno que se le pasó llega tarde, con una disculpa, la próxima vez que la abras.",
+      "gamesTitle": "Jugar con ella",
+      "games": "El botón 🎮 a su lado abre sus juegos en su propia ventana, para jugar mientras Claude trabaja: piedra, papel o tijera, atrapa los corazones (30 segundos), reflejos y adivina el número. Se cierra con ✕ o con 🎮 otra vez. Si Claude termina mientras juegas, aparece un aviso pequeño «✔ Claude terminó» y el juego sigue. Cuando Claude lleva más de un minuto trabajando y acercas el cursor, ella te propone jugar (una vez por tarea; se apaga en Comportamiento → Proponer juegos o con `/claudia juegos off`). Desde la terminal: `/claudia juega` o `/claudia juega reflejos`."
     }
   },
   "en": {
@@ -73,6 +325,258 @@
       "bottom-right": "Bottom right",
       "center": "Center",
       "cursor": "Move with cursor"
+    },
+    "tools": {
+      "stay": "Stay / stroll",
+      "menu": "Menu",
+      "drag": "Drag",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "talk": "Talk to me",
+      "tour": "My new buttons: 🌙 do not disturb, 👁 hides me and 🎮 is for playing.",
+      "quiet": "Do not disturb",
+      "quietOff": "Let her talk again",
+      "hide": "Hide me",
+      "games": "Play"
+    },
+    "nolistener": "I can hear you, but no claude-chan session is open to answer.",
+    "nomic": "I could not open the microphone. Is ffmpeg installed?",
+    "quietOn": "Okay, I will stay quiet for {m} min. I am right here.",
+    "quietAbout": "Quiet for a while: no remarks, no voice, no warnings.",
+    "quietUntil": "Until {t}. Talk to her by microphone and she speaks again.",
+    "lectura": {
+      "title": "Reading",
+      "about": "What she reads aloud from her replies.",
+      "todo": "Everything",
+      "resumen": "Summary",
+      "burbuja": "Bubble only"
+    },
+    "back": [
+      "You are back!",
+      "There you are. I kept your seat warm.",
+      "Hi again! Good to see you."
+    ],
+    "done": "All done. It took me {m} minutes.",
+    "doneBack": "You are back. I finished {m} min ago: {line}",
+    "doneNote": "Done",
+    "reminder": "{text}! You asked me to remind you.",
+    "reminderLate": "Sorry, I missed the time: {text}",
+    "reminderList": "Reminders",
+    "hideHow": "Hiding now. To bring me back: the icon next to the clock → Mostrar, or {key}.",
+    "games": {
+      "pick": "What shall we play?",
+      "names": {
+        "ppt": "Rock, paper, scissors",
+        "corazones": "Catch the hearts",
+        "reflejos": "Reflexes",
+        "numero": "Guess the number"
+      },
+      "how": {
+        "ppt": "Pick your hand. I count down and show mine.",
+        "corazones": "You have 30 seconds: click the hearts and stars before they fade.",
+        "reflejos": "Wait for my “now!” and click as fast as you can.",
+        "numero": "I thought of a number from 1 to 20. Tap one and I say higher or lower."
+      },
+      "propose": "Shall we play while you wait? 🎮",
+      "doneChip": "✔ Claude finished",
+      "again": "Again",
+      "menu": "Games",
+      "close": "Close",
+      "start": "Start",
+      "score": "You {me} · Me {her}",
+      "points": "{n} pts",
+      "combo": "Streak ×{n}",
+      "best": "Best: {n}",
+      "ms": "{n} ms",
+      "tries": "Tries: {n}",
+      "offer": "Offer games",
+      "offerAbout": "When Claude has been working for over a minute and you bring the cursor near, she offers a game (once per task).",
+      "ppt": {
+        "count": [
+          "Rock…",
+          "paper…",
+          "scissors!"
+        ],
+        "win": [
+          "You won. This time.",
+          "Hmph. Pure luck."
+        ],
+        "lose": [
+          "I won!",
+          "Ha, I read your hand."
+        ],
+        "tie": [
+          "A tie. Again.",
+          "We think alike."
+        ]
+      },
+      "hearts": {
+        "start": "Catch them all!",
+        "streak": [
+          "A streak of {n}!",
+          "Yes, like that! {n} in a row."
+        ],
+        "miss": [
+          "Oops, that one got away.",
+          "That one faded!"
+        ],
+        "end": [
+          "Time. {n} points, not bad.",
+          "{n} points. More next time."
+        ],
+        "record": [
+          "{n} points! A new record.",
+          "Record! {n} points."
+        ]
+      },
+      "reflex": {
+        "wait": "Wait…",
+        "go": "NOW!",
+        "early": [
+          "Not yet! No cheating.",
+          "So eager… wait for my signal."
+        ],
+        "fast": [
+          "Such quick hands.",
+          "Did you have coffee? So fast."
+        ],
+        "ok": [
+          "Good, but you can do better.",
+          "Not bad. Again."
+        ],
+        "slow": [
+          "Did you fall asleep?",
+          "Oh, so slow. Once more."
+        ],
+        "record": [
+          "Your best time!",
+          "A new record!"
+        ]
+      },
+      "number": {
+        "start": "I have one. Which is it?",
+        "higher": "Higher.",
+        "lower": "Lower.",
+        "quick": [
+          "In {n}? Did you read my mind?",
+          "Hmph, {n} tries. Lucky."
+        ],
+        "fair": [
+          "That was it! In {n} tries.",
+          "Correct. {n} tries, not bad."
+        ],
+        "slow": [
+          "At last… {n} tries. I won this one.",
+          "{n} tries. I kept you going in circles."
+        ]
+      },
+      "flavor": {
+        "yandere": {
+          "won": [
+            "You won… but you don't play like this with Copilot, right?"
+          ],
+          "lost": [
+            "I won. Another round?"
+          ]
+        },
+        "tsundere": {
+          "won": [
+            "I-it's not like I let you win, okay?"
+          ],
+          "lost": [
+            "Ha! And don't think I enjoyed it. Well, a little."
+          ]
+        },
+        "dulce": {
+          "won": [
+            "You won! You play so well."
+          ],
+          "lost": [
+            "I won, but you played really well."
+          ]
+        },
+        "kuudere": {
+          "won": [
+            "You won. Noted."
+          ],
+          "lost": [
+            "I won. As expected."
+          ]
+        },
+        "onee-san": {
+          "won": [
+            "Ara ara, you beat me. Well done."
+          ],
+          "lost": [
+            "Ara, I won. Want a rematch?"
+          ]
+        },
+        "genki": {
+          "won": [
+            "You won! Again, again, again!"
+          ],
+          "lost": [
+            "I won! What a match though, let's go again!"
+          ]
+        },
+        "dandere": {
+          "won": [
+            "Y-you won… that's nice. I'm glad."
+          ],
+          "lost": [
+            "Oh… I won. S-sorry."
+          ]
+        },
+        "himedere": {
+          "won": [
+            "I grant you this victory. Be grateful."
+          ],
+          "lost": [
+            "Ohoho, the crown does not lose. Applaud."
+          ]
+        },
+        "gamer": {
+          "won": [
+            "GG. Well played… I want a rematch."
+          ],
+          "lost": [
+            "GG EZ. Another, or are you scared?"
+          ]
+        },
+        "chuunibyou": {
+          "won": [
+            "Impossible! You broke my seal? …Well played."
+          ],
+          "lost": [
+            "Behold my dark power! …I mean, I won."
+          ]
+        }
+      }
+    },
+    "personalities": {
+      "title": "Personality",
+      "about": "How she talks to you and how she reacts.",
+      "yandere": "Sweet and far too attentive; anime-style jealous.",
+      "tsundere": "\"I didn't do it for you!\" — she did it for you.",
+      "dulce": "Loving and cheerful all the time.",
+      "kuudere": "Calm and dry outside, tender inside.",
+      "onee-san": "The big sister who looks after you and teases you.",
+      "genki": "Endless energy: your personal cheerleader. Dances more.",
+      "dandere": "Shy and quiet; opens up little by little.",
+      "himedere": "A princess who expects the royal treatment.",
+      "gamer": "Competitive: bugs are bosses and she wants a rematch.",
+      "chuunibyou": "Imaginary dark powers, very real fixes."
+    },
+    "carryHint": "Hey! Carry me wherever you like… but shake me too hard and I get dizzy.",
+    "help": {
+      "mute": "mute her or give her sound back",
+      "buttons": "Her buttons (bring the cursor close): 📌 stay still or stroll · ☰ this panel · ✋ drag her (shake her hard and she gets dizzy) · 🔊 mute · 🎤 talk to her · 🌙 do not disturb for 1 hour (again to end it) · 👁 hide her · 🎮 games",
+      "presenceTitle": "When you leave and come back",
+      "presence": "Leave the computer for a few minutes and she dozes off; when you return she stretches and greets you. If a long task finishes while you are away, she leaves a ✔ in her bubble and a notification, and tells you when you are back. To know whether you are there she only reads how long the keyboard and mouse have been untouched. The only other thing she reads is the position and size of the active window, to sit on top of it: never its title or its contents, nor your screen.",
+      "remindersTitle": "Reminders",
+      "reminders": "Say or type “remind me in 20 minutes to take out the laundry” (or “at 17:30…”, or “tomorrow at 9…”). At that time she comes to the centre, waves, shows it in her bubble and says it with her local voice; if she is hidden or you are away, a notification arrives too. They work even in do-not-disturb, because you asked for them. Without going through Claude: `/claudia recuerdame 20 take out the laundry` or `/claudia recuerdame 17:30 call mom` · `/claudia recordatorios` · `/claudia recordatorio borrar 2`. They are listed in the Ahora tab. If you close Claude with one less than three hours away, she waits hidden and comes back to tell you; one she missed arrives late, with an apology, the next time you open her.",
+      "gamesTitle": "Playing with her",
+      "games": "The 🎮 button beside her opens her games on her own window, to play while Claude works: rock, paper, scissors, catch the hearts (30 seconds), reflexes and guess the number. Close with ✕ or with 🎮 again. If Claude finishes while you play, a small “✔ Claude finished” notice appears and the game goes on. When Claude has been working for over a minute and you bring the cursor close, she proposes a game (once per task; turn it off in Comportamiento → Offer games or with `/claudia juegos off`). From the terminal: `/claudia juega` or `/claudia juega reflejos`."
     }
   },
   "ru": {
@@ -111,6 +615,258 @@
       "bottom-right": "Внизу справа",
       "center": "Центр",
       "cursor": "Двигать курсором"
+    },
+    "tools": {
+      "stay": "Стоять / гулять",
+      "menu": "Меню",
+      "drag": "Перетащить",
+      "mute": "Выключить звук",
+      "unmute": "Включить звук",
+      "talk": "Поговорить",
+      "tour": "Мои новые кнопки: 🌙 не беспокоить, 👁 прячет меня, а 🎮 — чтобы поиграть.",
+      "quiet": "Не беспокоить",
+      "quietOff": "Пусть снова говорит",
+      "hide": "Спрятать меня",
+      "games": "Играть"
+    },
+    "nolistener": "Я слышу тебя, но нет открытой сессии claude-chan, чтобы ответить.",
+    "nomic": "Не получилось открыть микрофон. ffmpeg установлен?",
+    "quietOn": "Хорошо, помолчу {m} мин. Я рядом.",
+    "quietAbout": "Помолчит какое-то время: без реплик, без голоса, без напоминаний.",
+    "quietUntil": "До {t}. Заговори с ней в микрофон — и она снова говорит.",
+    "lectura": {
+      "title": "Чтение вслух",
+      "about": "Что из своих ответов она читает вслух.",
+      "todo": "Всё",
+      "resumen": "Кратко",
+      "burbuja": "Только реплика"
+    },
+    "back": [
+      "С возвращением!",
+      "Вот и ты. Я берегла твоё место.",
+      "Привет ещё раз! Рада тебя видеть."
+    ],
+    "done": "Готово. Ушло {m} мин.",
+    "doneBack": "С возвращением. Я закончила {m} мин назад: {line}",
+    "doneNote": "Готово",
+    "reminder": "{text}! Напоминаю, как и обещала.",
+    "reminderLate": "Прости, пропустила время: {text}",
+    "reminderList": "Напоминания",
+    "hideHow": "Прячусь. Чтобы вернуть меня: значок рядом с часами → Mostrar или {key}.",
+    "games": {
+      "pick": "Во что сыграем?",
+      "names": {
+        "ppt": "Камень, ножницы, бумага",
+        "corazones": "Поймай сердечки",
+        "reflejos": "Реакция",
+        "numero": "Угадай число"
+      },
+      "how": {
+        "ppt": "Выбери руку. Я считаю и показываю свою.",
+        "corazones": "У тебя 30 секунд: нажимай на сердечки и звёздочки, пока они не погасли.",
+        "reflejos": "Жди моего «давай!» и нажимай как можно быстрее.",
+        "numero": "Я загадала число от 1 до 20. Нажми на число, а я скажу: больше или меньше."
+      },
+      "propose": "Сыграем, пока ждёшь? 🎮",
+      "doneChip": "✔ Claude закончил",
+      "again": "Ещё раз",
+      "menu": "Игры",
+      "close": "Закрыть",
+      "start": "Начать",
+      "score": "Ты {me} · Я {her}",
+      "points": "{n} очк.",
+      "combo": "Серия ×{n}",
+      "best": "Рекорд: {n}",
+      "ms": "{n} мс",
+      "tries": "Попытки: {n}",
+      "offer": "Предлагать игры",
+      "offerAbout": "Если Claude работает больше минуты и ты подводишь курсор, она предлагает сыграть (один раз за задачу).",
+      "ppt": {
+        "count": [
+          "Камень…",
+          "ножницы…",
+          "бумага!"
+        ],
+        "win": [
+          "Твоя взяла. В этот раз.",
+          "Хмф. Просто повезло."
+        ],
+        "lose": [
+          "Я выиграла!",
+          "Ха, я угадала твою руку."
+        ],
+        "tie": [
+          "Ничья. Ещё раз.",
+          "Мы думаем одинаково."
+        ]
+      },
+      "hearts": {
+        "start": "Лови их все!",
+        "streak": [
+          "Серия из {n}!",
+          "Да, вот так! Уже {n} подряд."
+        ],
+        "miss": [
+          "Ой, это ускользнуло.",
+          "Это погасло!"
+        ],
+        "end": [
+          "Время. {n} очков, неплохо.",
+          "{n} очков. В следующий раз больше."
+        ],
+        "record": [
+          "{n} очков! Новый рекорд.",
+          "Рекорд! {n} очков."
+        ]
+      },
+      "reflex": {
+        "wait": "Жди…",
+        "go": "ДАВАЙ!",
+        "early": [
+          "Ещё рано! Без жульничества.",
+          "Какое нетерпение… жди моего сигнала."
+        ],
+        "fast": [
+          "Какие быстрые руки.",
+          "Это кофе? Очень быстро."
+        ],
+        "ok": [
+          "Хорошо, но можно быстрее.",
+          "Неплохо. Ещё раз."
+        ],
+        "slow": [
+          "Ты там не спишь?",
+          "Ох, как медленно. Ещё раз."
+        ],
+        "record": [
+          "Твоё лучшее время!",
+          "Новый рекорд!"
+        ]
+      },
+      "number": {
+        "start": "Загадала. Какое?",
+        "higher": "Больше.",
+        "lower": "Меньше.",
+        "quick": [
+          "С {n}-й попытки? Ты читаешь мои мысли?",
+          "Хмф, попыток: {n}. Повезло."
+        ],
+        "fair": [
+          "Оно самое! Попыток: {n}.",
+          "Верно. Попыток: {n}, неплохо."
+        ],
+        "slow": [
+          "Наконец-то… попыток: {n}. Этот раунд мой.",
+          "Попыток: {n}. Я тебя запутала."
+        ]
+      },
+      "flavor": {
+        "yandere": {
+          "won": [
+            "Твоя победа… но с Copilot ты так не играешь, правда?"
+          ],
+          "lost": [
+            "Я выиграла. Ещё разок?"
+          ]
+        },
+        "tsundere": {
+          "won": [
+            "Н-не думай, что я поддалась, ясно?"
+          ],
+          "lost": [
+            "Ха! И не думай, что мне было весело. Ну, немножко."
+          ]
+        },
+        "dulce": {
+          "won": [
+            "Победа твоя! Как здорово ты играешь."
+          ],
+          "lost": [
+            "Я выиграла, но ты отлично играешь."
+          ]
+        },
+        "kuudere": {
+          "won": [
+            "Твоя победа. Записано."
+          ],
+          "lost": [
+            "Я выиграла. Ожидаемо."
+          ]
+        },
+        "onee-san": {
+          "won": [
+            "Ара-ара, победа за тобой. Молодец."
+          ],
+          "lost": [
+            "Ара, я выиграла. Хочешь реванш?"
+          ]
+        },
+        "genki": {
+          "won": [
+            "Победа твоя! Ещё, ещё, ещё!"
+          ],
+          "lost": [
+            "Я выиграла! Но какая игра, давай ещё!"
+          ]
+        },
+        "dandere": {
+          "won": [
+            "Т-твоя победа… здорово. Я рада."
+          ],
+          "lost": [
+            "Ой… я выиграла. П-прости."
+          ]
+        },
+        "himedere": {
+          "won": [
+            "Дарую тебе эту победу. Благодари."
+          ],
+          "lost": [
+            "О-хо-хо, корона не проигрывает. Аплодисменты."
+          ]
+        },
+        "gamer": {
+          "won": [
+            "GG. Хорошая игра… требую реванш."
+          ],
+          "lost": [
+            "GG EZ. Ещё раз, или страшно?"
+          ]
+        },
+        "chuunibyou": {
+          "won": [
+            "Невозможно! Моя печать сломана? …Хорошая игра."
+          ],
+          "lost": [
+            "Узри мою тёмную силу! …То есть, я выиграла."
+          ]
+        }
+      }
+    },
+    "personalities": {
+      "title": "Характер",
+      "about": "Как она с тобой говорит и как реагирует.",
+      "yandere": "Милая и слишком внимательная; ревнует по-анимешному.",
+      "tsundere": "«Я не ради тебя!» — но именно ради тебя.",
+      "dulce": "Ласковая и весёлая всегда.",
+      "kuudere": "Спокойная и сухая снаружи, нежная внутри.",
+      "onee-san": "Старшая сестрёнка: заботится и поддразнивает.",
+      "genki": "Бесконечная энергия: твоя личная чирлидерша. Чаще танцует.",
+      "dandere": "Застенчивая и тихая; раскрывается понемногу.",
+      "himedere": "Принцесса, которая ждёт королевского обращения.",
+      "gamer": "Азартная: баги — это боссы, и она требует реванш.",
+      "chuunibyou": "Воображаемые тёмные силы, очень настоящие исправления."
+    },
+    "carryHint": "Эй! Неси меня куда хочешь… но если сильно трясти, у меня закружится голова.",
+    "help": {
+      "mute": "выключить или вернуть ей звук",
+      "buttons": "Её кнопки (подведи курсор): 📌 стоит на месте или гуляет · ☰ эта панель · ✋ перетащить её (если сильно трясти, у неё закружится голова) · 🔊 выключить звук · 🎤 поговорить с ней · 🌙 не беспокоить 1 час (ещё раз — закончить) · 👁 спрятать её · 🎮 игры",
+      "presenceTitle": "Когда ты уходишь и возвращаешься",
+      "presence": "Если оставить компьютер на несколько минут, она задремлет, а когда ты вернёшься — потянется и поздоровается. Если длинная задача закончится, пока тебя нет, она оставит ✔ в облачке и уведомление и расскажет, когда ты вернёшься. Чтобы понять, на месте ли ты, она читает только то, как давно не трогали клавиатуру и мышь. Кроме этого она читает лишь положение и размер активного окна, чтобы сесть на него: ни его заголовок, ни содержимое, ни твой экран — никогда.",
+      "remindersTitle": "Напоминания",
+      "reminders": "Скажи или напиши «напомни через 20 минут достать бельё» (или «в 17:30…», или «завтра в 9…»). В это время она выходит в центр, машет, показывает текст в облачке и говорит его локальным голосом; если она спрятана или тебя нет, приходит ещё и уведомление. Они работают и в режиме «не беспокоить», потому что ты сам о них попросил. Без Claude: `/claudia recuerdame 20 достать бельё` или `/claudia recuerdame 17:30 позвонить маме` · `/claudia recordatorios` · `/claudia recordatorio borrar 2`. Список — на вкладке Ahora. Если закрыть Claude, когда до напоминания меньше трёх часов, она подождёт спрятавшись и вернётся напомнить; пропущенное придёт с опозданием и извинением при следующем запуске.",
+      "gamesTitle": "Играть с ней",
+      "games": "Кнопка 🎮 рядом с ней открывает игры прямо в её окне, чтобы играть, пока Claude работает: камень, ножницы, бумага, поймай сердечки (30 секунд), реакция и угадай число. Закрывается кнопкой ✕ или ещё раз 🎮. Если Claude закончит, пока ты играешь, появится маленькая пометка «✔ Claude закончил», а игра продолжится. Когда Claude работает больше минуты и ты подводишь курсор, она предлагает сыграть (один раз за задачу; отключается в Comportamiento → Предлагать игры или командой `/claudia juegos off`). Из терминала: `/claudia juega` или `/claudia juega reflejos`."
     }
   },
   "pt": {
@@ -149,6 +905,258 @@
       "bottom-right": "Inferior direito",
       "center": "Centro",
       "cursor": "Mover com o cursor"
+    },
+    "tools": {
+      "stay": "Quieta / passear",
+      "menu": "Menu",
+      "drag": "Arrastar",
+      "mute": "Silenciar",
+      "unmute": "Ativar som",
+      "talk": "Falar comigo",
+      "tour": "Meus botões novos: 🌙 não perturbar, 👁 me esconde e 🎮 para jogar.",
+      "quiet": "Não perturbar",
+      "quietOff": "Pode falar de novo",
+      "hide": "Me esconder",
+      "games": "Jogar"
+    },
+    "nolistener": "Eu te escuto, mas não há sessão do claude-chan aberta para responder.",
+    "nomic": "Não consegui abrir o microfone. O ffmpeg está instalado?",
+    "quietOn": "Tá bom, fico quietinha por {m} min. Estou aqui.",
+    "quietAbout": "Quietinha por um tempo: sem comentários, sem voz, sem avisos.",
+    "quietUntil": "Até {t}. Fale com ela pelo microfone e ela volta a falar.",
+    "lectura": {
+      "title": "Leitura",
+      "about": "O que ela lê em voz alta das respostas.",
+      "todo": "Tudo",
+      "resumen": "Resumo",
+      "burbuja": "Só o balão"
+    },
+    "back": [
+      "Você voltou!",
+      "Aí está você. Guardei seu lugar.",
+      "Oi de novo! Que bom te ver."
+    ],
+    "done": "Terminei. Levei {m} minutos.",
+    "doneBack": "Você voltou. Terminei há {m} min: {line}",
+    "doneNote": "Pronto",
+    "reminder": "{text}! Você pediu para eu lembrar.",
+    "reminderLate": "Desculpa, passou da hora: {text}",
+    "reminderList": "Lembretes",
+    "hideHow": "Vou me esconder. Para me trazer de volta: ícone ao lado do relógio → Mostrar, ou {key}.",
+    "games": {
+      "pick": "Do que vamos brincar?",
+      "names": {
+        "ppt": "Pedra, papel ou tesoura",
+        "corazones": "Pegue os corações",
+        "reflejos": "Reflexos",
+        "numero": "Adivinhe o número"
+      },
+      "how": {
+        "ppt": "Escolha a sua mão. Eu conto e mostro a minha.",
+        "corazones": "Você tem 30 segundos: clique nos corações e estrelas antes que se apaguem.",
+        "reflejos": "Espere o meu «já!» e clique o mais rápido que puder.",
+        "numero": "Pensei em um número de 1 a 20. Toque em um e eu digo se é maior ou menor."
+      },
+      "propose": "Vamos jogar enquanto você espera? 🎮",
+      "doneChip": "✔ Claude terminou",
+      "again": "De novo",
+      "menu": "Jogos",
+      "close": "Fechar",
+      "start": "Começar",
+      "score": "Você {me} · Eu {her}",
+      "points": "{n} pts",
+      "combo": "Sequência ×{n}",
+      "best": "Melhor: {n}",
+      "ms": "{n} ms",
+      "tries": "Tentativas: {n}",
+      "offer": "Propor jogos",
+      "offerAbout": "Se o Claude está trabalhando há mais de um minuto e você aproxima o cursor, ela propõe jogar (uma vez por tarefa).",
+      "ppt": {
+        "count": [
+          "Pedra…",
+          "papel…",
+          "tesoura!"
+        ],
+        "win": [
+          "Você ganhou. Desta vez.",
+          "Hmph. Pura sorte."
+        ],
+        "lose": [
+          "Ganhei!",
+          "Ha, eu li a sua mão."
+        ],
+        "tie": [
+          "Empate. Outra.",
+          "Pensamos igual."
+        ]
+      },
+      "hearts": {
+        "start": "Pegue todos!",
+        "streak": [
+          "Sequência de {n}!",
+          "Isso, isso! Já são {n} seguidos."
+        ],
+        "miss": [
+          "Ops, esse escapou.",
+          "Esse se apagou!"
+        ],
+        "end": [
+          "Acabou o tempo. {n} pontos, nada mal.",
+          "{n} pontos. Da próxima, mais."
+        ],
+        "record": [
+          "{n} pontos! Novo recorde.",
+          "Recorde! {n} pontos."
+        ]
+      },
+      "reflex": {
+        "wait": "Espere…",
+        "go": "JÁ!",
+        "early": [
+          "Ainda não! Sem trapaça.",
+          "Que ansiedade… espere o meu sinal."
+        ],
+        "fast": [
+          "Que mãos rápidas.",
+          "Tomou café? Rapidíssimo."
+        ],
+        "ok": [
+          "Bom, mas você consegue mais.",
+          "Nada mal. Outra."
+        ],
+        "slow": [
+          "Dormiu?",
+          "Nossa, que lentidão. De novo."
+        ],
+        "record": [
+          "O seu melhor tempo!",
+          "Novo recorde!"
+        ]
+      },
+      "number": {
+        "start": "Já pensei. Qual é?",
+        "higher": "Maior.",
+        "lower": "Menor.",
+        "quick": [
+          "Em {n}? Você leu a minha mente?",
+          "Hmph, {n} tentativas. Que sorte."
+        ],
+        "fair": [
+          "Era esse! Em {n} tentativas.",
+          "Certo. {n} tentativas, nada mal."
+        ],
+        "slow": [
+          "Até que enfim… {n} tentativas. Essa eu ganhei.",
+          "{n} tentativas. Deixei você dando voltas."
+        ]
+      },
+      "flavor": {
+        "yandere": {
+          "won": [
+            "Você ganhou… mas com o Copilot você não joga assim, né?"
+          ],
+          "lost": [
+            "Ganhei. Mais uma?"
+          ]
+        },
+        "tsundere": {
+          "won": [
+            "N-não é que eu tenha deixado você ganhar, tá?"
+          ],
+          "lost": [
+            "Ha! E não pense que eu me diverti. Bom, um pouco."
+          ]
+        },
+        "dulce": {
+          "won": [
+            "Você ganhou! Como joga bem."
+          ],
+          "lost": [
+            "Ganhei, mas você jogou muito bem."
+          ]
+        },
+        "kuudere": {
+          "won": [
+            "Você ganhou. Anotado."
+          ],
+          "lost": [
+            "Ganhei. Era o esperado."
+          ]
+        },
+        "onee-san": {
+          "won": [
+            "Ara ara, você me venceu. Muito bem."
+          ],
+          "lost": [
+            "Ara, ganhei. Quer a revanche?"
+          ]
+        },
+        "genki": {
+          "won": [
+            "Você ganhou! Outra, outra, outra!"
+          ],
+          "lost": [
+            "Ganhei! Mas que partidaça, vamos de novo!"
+          ]
+        },
+        "dandere": {
+          "won": [
+            "V-você ganhou… que bom. Fico feliz."
+          ],
+          "lost": [
+            "Ah… ganhei. D-desculpa."
+          ]
+        },
+        "himedere": {
+          "won": [
+            "Eu concedo esta vitória a você. Agradeça."
+          ],
+          "lost": [
+            "Ohoho, a coroa não perde. Aplauda."
+          ]
+        },
+        "gamer": {
+          "won": [
+            "GG. Bem jogado… quero a revanche."
+          ],
+          "lost": [
+            "GG EZ. Outra, ou está com medo?"
+          ]
+        },
+        "chuunibyou": {
+          "won": [
+            "Impossível! Você quebrou meu selo? …Bem jogado."
+          ],
+          "lost": [
+            "Contemple meu poder sombrio! …Quer dizer, ganhei."
+          ]
+        }
+      }
+    },
+    "personalities": {
+      "title": "Personalidade",
+      "about": "Como ela fala com você e como reage.",
+      "yandere": "Doce e atenta demais; ciumenta estilo anime.",
+      "tsundere": "\"Não fiz por você!\", mas fez por você.",
+      "dulce": "Carinhosa e animada o tempo todo.",
+      "kuudere": "Calma e seca por fora, terna por dentro.",
+      "onee-san": "A irmã mais velha que cuida de você e provoca.",
+      "genki": "Energia sem fim: sua líder de torcida. Dança mais.",
+      "dandere": "Tímida e quieta; se solta aos poucos.",
+      "himedere": "Uma princesa que espera tratamento de realeza.",
+      "gamer": "Competitiva: bugs são chefes e ela quer revanche.",
+      "chuunibyou": "Poderes sombrios imaginários, consertos bem reais."
+    },
+    "carryHint": "Ei! Me leve para onde quiser… mas se me sacudir muito, fico tonta.",
+    "help": {
+      "mute": "silenciá-la ou devolver o som",
+      "buttons": "Os botões dela (aproxime o cursor): 📌 parada ou passeando · ☰ este painel · ✋ arrastá-la (se sacudir muito, ela fica tonta) · 🔊 silenciar · 🎤 falar com ela · 🌙 não perturbar por 1 hora (de novo para terminar) · 👁 escondê-la · 🎮 jogos",
+      "presenceTitle": "Quando você sai e volta",
+      "presence": "Se você deixa o computador por alguns minutos ela cochila, e quando você volta ela se espreguiça e te cumprimenta. Se uma tarefa longa termina enquanto você está fora, ela deixa um ✔ no balão e uma notificação, e te conta quando você volta. Para saber se você está aí, ela só lê há quanto tempo o teclado e o mouse não são tocados. A única outra coisa que ela lê é a posição e o tamanho da janela ativa, para se sentar em cima: nunca o título nem o conteúdo dela, nem a sua tela.",
+      "remindersTitle": "Lembretes",
+      "reminders": "Diga ou escreva «me lembre em 20 minutos de tirar a roupa» (ou «às 17:30…», ou «amanhã às 9…»). Na hora ela vem ao centro, acena, mostra no balão e diz com a voz local; se estiver escondida ou você estiver fora, chega também uma notificação. Funcionam mesmo em «não perturbar», porque você pediu. Sem passar pelo Claude: `/claudia recuerdame 20 tirar a roupa` ou `/claudia recuerdame 17:30 ligar para a mãe` · `/claudia recordatorios` · `/claudia recordatorio borrar 2`. Eles aparecem na aba Ahora. Se você fechar o Claude com um a menos de três horas, ela espera escondida e volta para avisar; um que ela perdeu chega atrasado, com um pedido de desculpas, na próxima vez que você a abrir.",
+      "gamesTitle": "Jogar com ela",
+      "games": "O botão 🎮 ao lado dela abre os jogos na própria janela dela, para jogar enquanto o Claude trabalha: pedra, papel ou tesoura, pegue os corações (30 segundos), reflexos e adivinhe o número. Fecha com ✕ ou com 🎮 de novo. Se o Claude terminar enquanto você joga, aparece um aviso pequeno «✔ Claude terminou» e o jogo continua. Quando o Claude está trabalhando há mais de um minuto e você aproxima o cursor, ela propõe jogar (uma vez por tarefa; desligue em Comportamiento → Propor jogos ou com `/claudia juegos off`). Pelo terminal: `/claudia juega` ou `/claudia juega reflejos`."
     }
   },
   "ja": {
@@ -187,6 +1195,258 @@
       "bottom-right": "右下",
       "center": "中央",
       "cursor": "カーソルで動かす"
+    },
+    "tools": {
+      "stay": "じっとする / おさんぽ",
+      "menu": "メニュー",
+      "drag": "ドラッグ",
+      "mute": "ミュート",
+      "unmute": "ミュート解除",
+      "talk": "話しかける",
+      "tour": "新しいボタン：🌙おやすみモード、👁でかくれる、🎮であそぼう。",
+      "quiet": "おやすみモード",
+      "quietOff": "また話していいよ",
+      "hide": "かくれる",
+      "games": "あそぶ"
+    },
+    "nolistener": "聞こえてるけど、答えてくれる claude-chan のセッションが開いてないよ。",
+    "nomic": "マイクを開けなかったよ。ffmpeg は入ってる？",
+    "quietOn": "わかった、{m}分しずかにしてるね。ここにいるよ。",
+    "quietAbout": "しばらく静かにします：ひとりごとも、声も、お知らせもなし。",
+    "quietUntil": "{t}まで。マイクで話しかけると、また話します。",
+    "lectura": {
+      "title": "読み上げ",
+      "about": "返事のどこまで声に出して読むか。",
+      "todo": "全部",
+      "resumen": "要約",
+      "burbuja": "吹き出しだけ"
+    },
+    "back": [
+      "おかえり！",
+      "いた。席、とっておいたよ。",
+      "また会えたね。うれしい。"
+    ],
+    "done": "終わったよ。{m}分かかった。",
+    "doneBack": "おかえり。{m}分前に終わったよ：{line}",
+    "doneNote": "完了",
+    "reminder": "{text}！リマインドだよ。",
+    "reminderLate": "ごめん、時間すぎちゃった：{text}",
+    "reminderList": "リマインダー",
+    "hideHow": "かくれるね。呼びもどすには：時計のとなりのアイコン → Mostrar、または {key}。",
+    "games": {
+      "pick": "なにして遊ぶ？",
+      "names": {
+        "ppt": "じゃんけん",
+        "corazones": "ハートキャッチ",
+        "reflejos": "反射神経",
+        "numero": "数あて"
+      },
+      "how": {
+        "ppt": "手を選んでね。わたしが数えて、手を出すよ。",
+        "corazones": "30秒のあいだ、消える前にハートと星をクリックしてね。",
+        "reflejos": "「いま！」って言ったら、できるだけ早くクリックしてね。",
+        "numero": "1から20の数を考えたよ。数字を押したら、大きいか小さいか教えるね。"
+      },
+      "propose": "待ってるあいだ、遊ぼうか？ 🎮",
+      "doneChip": "✔ Claude 完了",
+      "again": "もう一回",
+      "menu": "ゲーム",
+      "close": "閉じる",
+      "start": "スタート",
+      "score": "きみ {me} · わたし {her}",
+      "points": "{n} 点",
+      "combo": "連続 ×{n}",
+      "best": "ベスト: {n}",
+      "ms": "{n} ms",
+      "tries": "回数: {n}",
+      "offer": "ゲームに誘う",
+      "offerAbout": "Claude が1分以上作業していてカーソルを近づけると、遊びに誘います（タスクごとに1回）。",
+      "ppt": {
+        "count": [
+          "じゃん…",
+          "けん…",
+          "ぽん！"
+        ],
+        "win": [
+          "きみの勝ち。今回はね。",
+          "ふん。まぐれだよ。"
+        ],
+        "lose": [
+          "わたしの勝ち！",
+          "ふふ、読めてたよ。"
+        ],
+        "tie": [
+          "あいこ。もう一回。",
+          "気が合うね。"
+        ]
+      },
+      "hearts": {
+        "start": "ぜんぶ捕まえて！",
+        "streak": [
+          "{n}連続！",
+          "その調子！{n}個つづけてるよ。"
+        ],
+        "miss": [
+          "あっ、逃げちゃった。",
+          "消えちゃった！"
+        ],
+        "end": [
+          "時間だよ。{n}点、なかなか。",
+          "{n}点。次はもっとね。"
+        ],
+        "record": [
+          "{n}点！新記録だよ。",
+          "新記録！{n}点。"
+        ]
+      },
+      "reflex": {
+        "wait": "まって…",
+        "go": "いま！",
+        "early": [
+          "まだだよ！ずるはなし。",
+          "せっかちだね…合図を待って。"
+        ],
+        "fast": [
+          "手が早いね。",
+          "コーヒー飲んだ？すごく速い。"
+        ],
+        "ok": [
+          "いいね、でももっといけるよ。",
+          "悪くない。もう一回。"
+        ],
+        "slow": [
+          "寝てた？",
+          "うーん、おそい。もう一回。"
+        ],
+        "record": [
+          "自己ベスト！",
+          "新記録！"
+        ]
+      },
+      "number": {
+        "start": "決めたよ。どれだと思う？",
+        "higher": "もっと大きい。",
+        "lower": "もっと小さい。",
+        "quick": [
+          "{n}回で？心を読んだの？",
+          "ふん、{n}回。運がいいね。"
+        ],
+        "fair": [
+          "それ！{n}回で当たり。",
+          "正解。{n}回、なかなか。"
+        ],
+        "slow": [
+          "やっと…{n}回。これはわたしの勝ち。",
+          "{n}回。ぐるぐるさせちゃった。"
+        ]
+      },
+      "flavor": {
+        "yandere": {
+          "won": [
+            "きみの勝ち…でもCopilotとはこんなふうに遊ばないよね？"
+          ],
+          "lost": [
+            "わたしの勝ち。もう一回する？"
+          ]
+        },
+        "tsundere": {
+          "won": [
+            "べ、別に勝たせてあげたわけじゃないからね？"
+          ],
+          "lost": [
+            "ふん！楽しかったわけじゃないから。…ちょっとだけ。"
+          ]
+        },
+        "dulce": {
+          "won": [
+            "きみの勝ち！上手だね。"
+          ],
+          "lost": [
+            "わたしの勝ち。でもすごく上手だったよ。"
+          ]
+        },
+        "kuudere": {
+          "won": [
+            "きみの勝ち。記録した。"
+          ],
+          "lost": [
+            "わたしの勝ち。予想どおり。"
+          ]
+        },
+        "onee-san": {
+          "won": [
+            "あらあら、負けちゃった。よくできました。"
+          ],
+          "lost": [
+            "あら、わたしの勝ち。リベンジする？"
+          ]
+        },
+        "genki": {
+          "won": [
+            "きみの勝ち！もう一回、もう一回！"
+          ],
+          "lost": [
+            "わたしの勝ち！でもいい勝負、もう一回いこう！"
+          ]
+        },
+        "dandere": {
+          "won": [
+            "き、きみの勝ち…よかった。うれしい。"
+          ],
+          "lost": [
+            "あ…勝っちゃった。ご、ごめんね。"
+          ]
+        },
+        "himedere": {
+          "won": [
+            "この勝利、授けてあげる。感謝しなさい。"
+          ],
+          "lost": [
+            "おほほ、王冠は負けないの。拍手は？"
+          ]
+        },
+        "gamer": {
+          "won": [
+            "GG。ナイスプレイ…リベンジさせて。"
+          ],
+          "lost": [
+            "GG EZ。もう一戦？それとも怖い？"
+          ]
+        },
+        "chuunibyou": {
+          "won": [
+            "ば、ばかな！わが封印を破った…？…ナイスゲーム。"
+          ],
+          "lost": [
+            "見よ、わが闇の力！…つまり、わたしの勝ち。"
+          ]
+        }
+      }
+    },
+    "personalities": {
+      "title": "性格",
+      "about": "話し方と反応のしかた。",
+      "yandere": "甘くて気にしすぎ。アニメ風のやきもち。",
+      "tsundere": "「あなたのためじゃない！」…でも、あなたのため。",
+      "dulce": "いつもやさしくて元気。",
+      "kuudere": "外はクールでそっけない、中はやさしい。",
+      "onee-san": "世話を焼いてからかうお姉さん。",
+      "genki": "元気いっぱいの応援団長。よく踊る。",
+      "dandere": "内気で無口。少しずつ心を開く。",
+      "himedere": "お姫さま扱いを求めるプリンセス。",
+      "gamer": "負けず嫌い。バグはボス、リベンジ希望。",
+      "chuunibyou": "闇の力は空想、修正は本物。"
+    },
+    "carryHint": "わっ！どこへでも連れてって…でも、あんまり振ると目が回っちゃうよ。",
+    "help": {
+      "mute": "ミュートする／音をもどす",
+      "buttons": "ボタン（カーソルを近づけてね）：📌 じっとする／おさんぽ · ☰ このパネル · ✋ ドラッグ（強く振ると目が回るよ） · 🔊 ミュート · 🎤 話しかける · 🌙 1時間おやすみモード（もう一度で終了） · 👁 かくす · 🎮 ゲーム",
+      "presenceTitle": "席をはなれて、もどったとき",
+      "presence": "数分パソコンからはなれると彼女はうとうとして、もどると伸びをしてあいさつします。いない間に長いタスクが終わったら、吹き出しに ✔ と通知を残して、もどったときに教えてくれます。あなたがいるかどうかは、キーボードとマウスにどれだけ触れていないかだけで判断します。ほかに読むのは、上に座るためのアクティブなウィンドウの位置と大きさだけで、タイトルや中身、画面を見ることはありません。",
+      "remindersTitle": "リマインダー",
+      "reminders": "「20分後に洗濯物を出すって教えて」（または「17:30に…」「明日の9時に…」）と言うか書いてね。時間になると画面の中央に来て手を振り、吹き出しに表示して、ローカルの声で伝えます。かくれているときや席をはずしているときは通知も届きます。あなたが頼んだものなので、おやすみモードでも届きます。Claudeを通さずに：`/claudia recuerdame 20 洗濯物を出す` または `/claudia recuerdame 17:30 お母さんに電話` · `/claudia recordatorios` · `/claudia recordatorio borrar 2`。一覧は Ahora タブにあります。3時間以内のリマインダーを残してClaudeを閉じると、彼女はかくれて待ち、時間に知らせにもどります。逃したものは、次に開いたときにおわびと一緒に届きます。",
+      "gamesTitle": "彼女とあそぶ",
+      "games": "となりの 🎮 ボタンで、Claudeが作業している間に彼女のウィンドウでゲームができます：じゃんけん、ハートキャッチ（30秒）、反射神経、数あて。✕ か、もう一度 🎮 で閉じます。あそんでいる間にClaudeが終わると、小さく「✔ Claude 完了」と出て、ゲームは続きます。Claudeが1分以上作業していてカーソルを近づけると、彼女がゲームにさそいます（1タスクに1回。Comportamiento → ゲームに誘う、または `/claudia juegos off` でオフ）。ターミナルから：`/claudia juega` または `/claudia juega reflejos`。"
     }
   }
 }
