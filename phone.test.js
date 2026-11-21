@@ -40,7 +40,10 @@ test('refused, wrong, expired or timed-out codes pair nobody', async () => {
   clock += 3 * 60 * 1000
   assert.strictEqual(await pairing.request({ code: second.value, name: 'x' }), null)
   const third = pairing.newCode()
+  // The pairing timer is unref'd so it never keeps the app alive; hold the loop open while waiting on it.
+  const keepAlive = setTimeout(() => {}, 1000)
   assert.strictEqual(await pairing.request({ code: third.value, name: 'x' }, 30), null)
+  clearTimeout(keepAlive)
   assert.deepStrictEqual(s.all(), [])
 })
 

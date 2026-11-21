@@ -66,7 +66,7 @@ test('every published character is credited in README and NOTICE', () => {
 })
 
 test('main.js lists whatever is in the folder, so a new character needs no code', () => {
-  const main = fs.readFileSync(path.join(__dirname, 'main.js'), 'utf8')
+  const main = fs.readFileSync(path.join(__dirname, 'main.js'), 'utf8').replace(/\r\n/g, '\n')
   const body = main.match(/function modelNames\(\) \{\n([\s\S]*?)\n\}/)[1]
   assert.match(body, /readdirSync\(dir\)\.filter\(f => f\.endsWith\('\.vrm'\)\)/)
   // The app's own characters and, in the installed app, the ones the user put in their folder.
