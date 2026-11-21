@@ -35,6 +35,10 @@
   .hint { margin: 0 0 8px; font-size: 12.5px; color: var(--soft); }
   .row { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { padding: 7px 13px; border: 2px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink); font: 600 14px system-ui, sans-serif; cursor: pointer; }
+  .reminder { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--ink); }
+  .reminder b { flex: none; font-variant-numeric: tabular-nums; }
+  .reminder span { flex: 1; overflow-wrap: anywhere; }
+  .reminder button { flex: none; border: 0; background: none; color: #c0392b; font-size: 15px; cursor: pointer; padding: 4px 8px; }
   .chip.on { border-color: var(--pink); color: var(--pink); background: var(--pink-soft); }
   .swatch { width: 34px; height: 34px; padding: 0; border: 2px solid var(--line); border-radius: 50%; cursor: pointer; }
   .swatch.on { outline: 3px solid var(--pink); outline-offset: 2px; }
@@ -73,6 +77,7 @@
 <div class="talk">
   <button class="mic" id="mic">🎤 Háblale</button>
   <div class="heard" id="heard"></div>
+  <button class="mic" id="phone" style="margin-top:10px;background:#fff;color:#1c2550;box-shadow:0 3px 0 #c9d2ee" onclick="send({type:'phone'})">📱 Llévame en el móvil</button>
 </div>
 <nav id="tabs">
   <button data-tab="ahora" class="on">Ahora</button>
@@ -94,6 +99,10 @@
     </div>
     <h2>Llevarla a…</h2>
     <div class="row" id="places"></div>
+    <div id="reminders" hidden>
+      <h2 id="reminderstitle">Recordatorios</h2>
+      <div id="reminderlist"></div>
+    </div>
   </section>
   <section id="look"></section>
   <section id="voice"></section>
@@ -103,13 +112,21 @@
     <div class="keys">
       <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd> hablarle (otra vez para terminar)<br>
       <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>H</kbd> ocultarla o mostrarla<br>
+      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>M</kbd> <span id="helpmute">silenciarla o devolverle el sonido</span><br>
       <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>C</kbd> moverla con el cursor (otra vez para soltarla)<br>
+      <span id="helpbuttons">Sus botones (acerca el cursor): 📌 quieta o paseando · ☰ este panel · ✋ arrastrarla (si la sacudes mucho, se marea) · 🔊 silenciarla · 🎤 hablarle · 🌙 no molestar 1 hora (otra vez para terminar) · 👁 ocultarla · 🎮 juegos</span><br>
       Caricia: pasa el cursor de lado a lado sobre su cabeza
     </div>
     <h2>Cómo te responde</h2>
     <p class="hint">Lo que le dices se transcribe en tu PC y lo contesta tu sesión de <code>claude-chan</code> (tu suscripción de Claude). Sin una sesión abierta y despierta, te escucha pero no te contesta: abre <code>claude-chan</code> en una terminal o escribe <code>/claudia on</code>.</p>
+    <h2 id="helppresenceTitle">Cuando te vas y vuelves</h2>
+    <p class="hint" id="helppresence">Si dejas la computadora unos minutos se adormece, y al volver se estira y te saluda. Si una tarea larga termina mientras no estás, deja un ✔ en su burbuja y una notificación, y te lo cuenta cuando regresas. Para saber si estás, solo lee cuánto tiempo llevas sin tocar el teclado o el ratón. Lo único más que lee es la posición y el tamaño de la ventana activa, para sentarse encima: nunca su título ni su contenido, ni tu pantalla.</p>
+    <h2 id="helpremindersTitle">Recordatorios</h2>
+    <p class="hint" id="helpreminders">Dile o escríbele «recuérdame en 20 minutos sacar la ropa» (o «a las 17:30…», o «mañana a las 9…»). A la hora viene al centro, te saluda, lo muestra en su burbuja y lo dice con su voz local; si está oculta o no estás, llega además una notificación. Funcionan aunque esté en «no molestar», porque tú los pediste. Sin pasar por Claude: <code>/claudia recuerdame 20 sacar la ropa</code> o <code>/claudia recuerdame 17:30 llamar a mamá</code> · <code>/claudia recordatorios</code> · <code>/claudia recordatorio borrar 2</code>. Se listan en la pestaña Ahora. Si cierras Claude con uno a menos de tres horas, ella espera oculta y vuelve para avisarte; uno que se le pasó llega tarde, con una disculpa, la próxima vez que la abras.</p>
+    <h2 id="helpgamesTitle">Jugar con ella</h2>
+    <p class="hint" id="helpgames">El botón 🎮 a su lado abre sus juegos en su propia ventana, para jugar mientras Claude trabaja: piedra, papel o tijera, atrapa los corazones (30 segundos), reflejos y adivina el número. Se cierra con ✕ o con 🎮 otra vez. Si Claude termina mientras juegas, aparece un aviso pequeño «✔ Claude terminó» y el juego sigue. Cuando Claude lleva más de un minuto trabajando y acercas el cursor, ella te propone jugar (una vez por tarea; se apaga en Comportamiento → Proponer juegos o con <code>/claudia juegos off</code>). Desde la terminal: <code>/claudia juega</code> o <code>/claudia juega reflejos</code>.</p>
     <h2>En Claude Code</h2>
-    <p class="hint"><code>/claudia help</code> lista todo · <code>/claudia on</code> / <code>off</code> · <code>/claudia baila</code> · <code>/claudia beso</code> · <code>/claudia panel</code></p>
+    <p class="hint"><code>/claudia help</code> lista todo · <code>/claudia on</code> / <code>off</code> · <code>/claudia baila</code> · <code>/claudia beso</code> · <code>/claudia panel</code> · <code>/claudia sonido on</code> / <code>off</code> · <code>/claudia silencio 60</code> / <code>off</code> (no molestar) · <code>/claudia lectura todo</code> | <code>resumen</code> | <code>burbuja</code> · <code>/claudia personalidad genki</code> · <code>/claudia diario</code> y <code>/claudia olvida 3</code> (lo que recuerda de ti) · <code>/claudia juega</code></p>
     <h2>Menú del ícono</h2>
     <p class="hint">Junto al reloj, en la barra de arriba: clic en la carita de Claudia.</p>
     <div class="credit">Claudia-chan fue creada por <b>Dio Calderon</b> · <a href="https://github.com/Diocal/claudia-chan" target="_blank">github.com/Diocal/claudia-chan</a><br>Gratis para uso personal (licencia PolyForm Noncommercial). Si la compartes o haces tu versión, da crédito a su creador.</div>
@@ -129,6 +146,11 @@ const PERSONALITIES = [
   ['dulce', 'Dulce', 'Cariñosa y animada todo el tiempo.'],
   ['kuudere', 'Kuudere', 'Tranquila y seca por fuera, tierna por dentro.'],
   ['onee-san', 'Onee-san', 'La hermana mayor que te cuida y te molesta.'],
+  ['genki', 'Genki', 'Energía sin fin: tu porrista personal. Baila más.'],
+  ['dandere', 'Dandere', 'Tímida y callada; se suelta poco a poco.'],
+  ['himedere', 'Himedere', 'Una princesa que espera trato de realeza.'],
+  ['gamer', 'Gamer', 'Competitiva: los bugs son jefes y quiere la revancha.'],
+  ['chuunibyou', 'Chuunibyou', 'Poderes oscuros imaginarios, arreglos muy reales.'],
 ]
 const VOICES = [
   ['kokoro', 'Kokoro (recomendada)', 'Chica joven, acento latino. Gratis, en tu PC.'],
@@ -137,7 +159,7 @@ const VOICES = [
   ['japones', 'Japonés', 'Responde en japonés.'],
 ]
 const LANGS = [['es', 'Español'], ['en', 'English'], ['pt', 'Português'], ['ru', 'Русский'], ['ja', '日本語']]
-const DEFAULTS = { personalidad: 'yandere', voz: 'kokoro', tono: 'normal', velocidad: 'normal', tamano: 'normal', pasear: 'on', idioma: 'es', modelo: 'vita' }
+const DEFAULTS = { personalidad: 'yandere', voz: 'kokoro', tono: 'normal', velocidad: 'normal', tamano: 'normal', pasear: 'on', idioma: 'es', modelo: 'vita', lectura: 'todo', juegos: 'on' }
 const send = body => fetch('/event', { method: 'POST', headers: { 'x-claudia-chan': '1' }, body: JSON.stringify(body) })
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e }
 
@@ -173,12 +195,45 @@ function toggle(parent, title, about, isOn, onChange) {
   const sw = el('button', { className: 'switch' + (isOn ? ' on' : '') })
   sw.onclick = () => { sw.classList.toggle('on'); onChange(sw.classList.contains('on')) }
   parent.append(el('div', { className: 'toggle' }, el('div', {}, el('b', { textContent: title }), el('small', { textContent: about })), sw))
+  return sw
+}
+
+// The sound switch follows mutes made elsewhere (her 🔊 button, the tray, Ctrl+Alt+M, /claudia sonido).
+let soundSwitch = null
+// Quiet mode ("no molestar") can also start or end elsewhere: the tray, her 🌙 button,
+// /claudia silencio, talking to her, or simply its time running out.
+let quietSwitch = null
+let quietMinutes = 60
+let quietText = {}
+const clockTime = at => new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+// What she promised to remind you of ("recuérdame en 20 minutos…", /claudia recuerdame): the time, the
+// text and a ✕ to forget it. Hidden while there is none. The text is set as textContent, never as HTML.
+let remindersShown = ''
+function showReminders(list) {
+  // Redrawn only on a change: the poll runs every second and would steal a click on ✕.
+  const key = JSON.stringify(list)
+  if (key === remindersShown) return
+  remindersShown = key
+  document.getElementById('reminders').hidden = list.length === 0
+  const today = new Date().toDateString()
+  const when = due => (new Date(due).toDateString() === today ? '' : new Date(due).toLocaleDateString([], { weekday: 'short' }) + ' ') + clockTime(due)
+  document.getElementById('reminderlist').replaceChildren(...list.map(({ id, text, due }) => el('div', { className: 'reminder' },
+    el('b', { textContent: when(due) }), el('span', { textContent: text }),
+    el('button', { textContent: '✕', title: '✕', onclick: () => send({ type: 'reminder-del', id }).then(poll) }))))
+}
+
+function showQuiet(until) {
+  quietSwitch?.classList.toggle('on', until > 0)
+  const hint = document.getElementById('quietuntil')
+  if (hint) hint.textContent = until > 0 ? quietText.until.replace('{t}', clockTime(until)) : ''
 }
 
 const setting = (key, value) => send({ type: 'setting', key, value })
 
-Promise.all([fetch('/config.json').then(r => r.json()).catch(() => ({})), fetch('/models').then(r => r.json()).catch(() => [])]).then(([config, models]) => {
+Promise.all([fetch('/config.json').then(r => r.json()).catch(() => ({})), fetch('/models').then(r => r.json()).catch(() => []), fetch('/i18n.json').then(r => r.json()).catch(() => ({}))]).then(([config, models, i18n]) => {
   const get = key => config[key] ?? DEFAULTS[key]
+  // The newer settings are written in her five languages (i18n.json); the older ones are still Spanish only.
+  const text = i18n[get('idioma')] ?? i18n.es ?? {}
   document.getElementById('name').textContent = config.name ?? 'Claudia-chan'
 
   // Ahora: places
@@ -201,11 +256,15 @@ Promise.all([fetch('/config.json').then(r => r.json()).catch(() => ({})), fetch(
 
   // Personalidad y voz
   const voice = document.getElementById('voice')
-  pick(voice, 'Personalidad', 'Cómo te habla y cómo reacciona.', PERSONALITIES, get('personalidad'), v => setting('personalidad', v), 'card')
+  // The names are the anime terms themselves; what each one is like comes in her language.
+  const kinds = text.personalities ?? {}
+  pick(voice, kinds.title ?? 'Personalidad', kinds.about ?? 'Cómo te habla y cómo reacciona.', PERSONALITIES.map(([id, title, about]) => [id, title, kinds[id] ?? about]), get('personalidad'), v => setting('personalidad', v), 'card')
   pick(voice, 'Voz', '', VOICES, get('voz'), v => setting('voz', v), 'card')
   pick(voice, 'Tono', '', [['grave', 'Más grave'], ['normal', 'Normal'], ['agudo', 'Más agudo']], get('tono'), v => setting('tono', v))
   pick(voice, 'Velocidad', '', [['lenta', 'Lenta'], ['normal', 'Normal'], ['rapida', 'Rápida']], get('velocidad'), v => setting('velocidad', v))
-  voice.append(el('button', { className: 'chip try', textContent: '🔊 Probar voz', onclick: () => send({ type: 'speak', natural: true, isSpanish: true, text: '¡Hola, amor! ¿Así te gusta cómo hablo?' }) }))
+  voice.append(el('button', { className: 'chip try', textContent: '🔊 Probar voz', onclick: () => send({ type: 'speak', natural: true, isSpanish: true, force: true, text: '¡Hola, amor! ¿Así te gusta cómo hablo?' }) }))
+  const reading = text.lectura ?? {}
+  pick(voice, reading.title ?? 'Lectura', reading.about ?? '', ['todo', 'resumen', 'burbuja'].map(mode => [mode, reading[mode] ?? mode]), get('lectura'), v => setting('lectura', v))
   pick(voice, 'Idioma', 'En qué idioma te habla.', LANGS, get('idioma'), v => setting('idioma', v).then(() => location.reload()))
 
   // Comportamiento
@@ -214,7 +273,31 @@ Promise.all([fetch('/config.json').then(r => r.json()).catch(() => ({})), fetch(
   toggle(life, 'Verla en VR / realidad mixta', 'Abre un acceso seguro en tu WiFi para tus gafas (con una clave en el enlace).', config.vr === 'on', on => setting('vr', on ? 'on' : 'off').then(poll))
   life.append(el('p', { className: 'hint', id: 'vrlink' }))
   toggle(life, 'Vida propia', 'Pasea por la pantalla, se sienta en tu ventana y a veces baila.', get('pasear') === 'on', on => setting('pasear', on ? 'on' : 'off'))
-  toggle(life, 'Sonido', 'Su voz y sus efectos.', !config.muted, on => send({ type: 'mute', value: !on }))
+  toggle(life, `🎮 ${text.games?.offer ?? 'Proponer juegos'}`, text.games?.offerAbout ?? '', get('juegos') === 'on', on => setting('juegos', on ? 'on' : 'off'))
+  soundSwitch = toggle(life, 'Sonido', 'Su voz y sus efectos. También con Ctrl+Alt+M.', !config.muted, on => send({ type: 'mute', value: !on }))
+  quietText = { until: text.quietUntil ?? '{t}' }
+  if (text.reminderList) document.getElementById('reminderstitle').textContent = text.reminderList
+  // Ayuda: the newer sections in her language (i18n `help`); `like this` becomes a command in <code>.
+  // Built node by node, never as HTML. The Spanish already in the page stays if a text is missing.
+  for (const [key, words] of Object.entries(text.help ?? {})) {
+    const pieces = words.split('`').map((piece, i) => (i % 2 ? el('code', { textContent: piece }) : piece))
+    document.getElementById(`help${key}`)?.replaceChildren(...pieces)
+  }
+  const startQuiet = () => send({ type: 'quiet', minutes: quietSwitch.classList.contains('on') ? quietMinutes : 0 }).then(poll)
+  quietSwitch = toggle(life, `🌙 ${text.tools?.quiet ?? 'No molestar'}`, text.quietAbout ?? '', config.quietUntil > Date.now(), startQuiet)
+  // How long: picking another length while she is quiet restarts it with that length.
+  const lengths = el('div', { className: 'row try' })
+  for (const minutes of [30, 60, 120]) {
+    const chip = el('button', { className: 'chip' + (minutes === quietMinutes ? ' on' : ''), textContent: `${minutes} min` })
+    chip.onclick = () => {
+      lengths.querySelectorAll('button').forEach(x => x.classList.remove('on'))
+      chip.classList.add('on')
+      quietMinutes = minutes
+      if (quietSwitch.classList.contains('on')) startQuiet()
+    }
+    lengths.append(chip)
+  }
+  life.append(lengths, el('p', { className: 'hint', id: 'quietuntil' }))
   life.append(el('h2', { textContent: 'Horario de trabajo' }), el('p', { className: 'hint', textContent: 'Fuera de este horario te manda a descansar.' }))
   const hours = config.hours
   const from = el('select'), to = el('select')
@@ -233,6 +316,9 @@ async function poll() {
   const dot = document.getElementById('dot'), state = document.getElementById('state')
   if (!st) { dot.className = 'dot'; state.textContent = 'cerrada'; return }
   mic.classList.toggle('on', st.listening)
+  soundSwitch?.classList.toggle('on', !st.muted)
+  showQuiet(st.quietUntil ?? 0)
+  showReminders(st.reminders ?? [])
   mic.textContent = st.listening ? '⏹ Terminar · te estoy escuchando…' : '🎤 Háblale'
   dot.className = 'dot ' + (st.listening ? 'live' : st.listener ? 'ok' : 'warn')
   state.textContent = st.listening ? 'Escuchándote' : st.listener ? 'Lista para hablar contigo' : 'Te escucha, pero no hay sesión de claude-chan para contestarte'

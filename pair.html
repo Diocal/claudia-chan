@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Claudia-chan · móvil</title>
+<style>
+  :root { --navy: #1c2550; --soft: #5a6290; --pink: #ff5fa2; --pink-d: #e03d84; --teal: #21bfbd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: var(--navy); background: linear-gradient(180deg, #f1f4ff, #f6ecf6); min-height: 100vh; }
+  main { padding: 26px 26px 30px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  p { margin: 0 0 12px; color: var(--soft); }
+  .card { background: #fff; border-radius: 22px; padding: 20px; box-shadow: 0 1px 0 #fff inset, 0 16px 36px -22px rgba(28,37,80,.45); margin: 16px 0; }
+  .qr { display: grid; place-items: center; gap: 10px; text-align: center; }
+  .qr img { width: 300px; height: 300px; image-rendering: pixelated; border-radius: 12px; }
+  .big { font-size: 17px; font-weight: 700; color: var(--navy); margin: 0; }
+  button { font: 700 15px system-ui, sans-serif; border: 0; border-radius: 14px; padding: 12px 18px; cursor: pointer; }
+  .primary { color: #fff; background: linear-gradient(180deg, #ff86ba, var(--pink)); box-shadow: 0 4px 0 var(--pink-d); }
+  .primary:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--pink-d); }
+  .plain { background: #eef1fb; color: var(--navy); }
+  .ask { border: 3px solid var(--pink); }
+  .ask .row { display: flex; gap: 10px; margin-top: 12px; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #eef0f8; }
+  li:first-child { border-top: 0; }
+  li .name { font-weight: 700; flex: 1; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #c9cfe4; }
+  .dot.on { background: var(--teal); box-shadow: 0 0 0 4px rgba(33,191,189,.2); }
+  .small { font-size: 13px; color: var(--soft); }
+  .err { color: #c0245e; font-weight: 600; }
+  .spinner { width: 34px; height: 34px; border-radius: 50%; border: 4px solid #e4e8f6; border-top-color: var(--pink); animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(1turn); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title"></h1>
+  <p id="lead"></p>
+  <div id="ask"></div>
+  <div class="card qr" id="qr-card"></div>
+  <div class="card" id="phones-card" hidden>
+    <p class="big" id="phones-title"></p>
+    <ul id="phones"></ul>
+  </div>
+  <p class="small" id="fine"></p>
+</main>
+<script>
+const T = {
+  es: {
+    title: '📱 Claudia en tu móvil',
+    lead: 'Mírala, escúchala y háblale desde el móvil. El cerebro sigue aquí: tu sesión de claude-chan y tu suscripción.',
+    start: 'Conectar un móvil', opening: 'Abriendo la conexión…', scan: 'Escanéame con la cámara del móvil',
+    expires: s => `Este código vale ${s} s y una sola vez.`, newQr: 'Nuevo código', stop: 'Apagar la conexión',
+    off: 'La conexión con el móvil está apagada. Nadie puede entrar.',
+    ask: name => `«${name}» quiere conectarse`, askLead: 'Acepta solo si es tu móvil y lo acabas de escanear tú.',
+    accept: 'Aceptar', refuse: 'Rechazar', phones: 'Tus móviles', forget: 'Olvidar', now: 'conectado ahora', seen: d => `visto ${d}`,
+    fine: 'La conexión pasa por un túnel de Cloudflare con cifrado. Sin aceptar aquí no entra nadie, y cada móvil se puede olvidar. Se apaga sola tras 30 minutos sin uso. Lo que digas desde el móvil le llega a Claude marcado con 📱, y Claude te pedirá confirmación antes de algo delicado.',
+    error: 'No pude abrir la conexión:',
+  },
+  en: {
+    title: '📱 Claudia on your phone',
+    lead: 'See her, hear her and talk to her from your phone. The brain stays here: your claude-chan session and your subscription.',
+    start: 'Connect a phone', opening: 'Opening the connection…', scan: 'Scan me with your phone camera',
+    expires: s => `This code works for ${s} s, once.`, newQr: 'New code', stop: 'Turn the connection off',
+    off: 'The phone connection is off. Nobody can get in.',
+    ask: name => `"${name}" wants to connect`, askLead: 'Accept only if it is your phone and you just scanned it.',
+    accept: 'Accept', refuse: 'Refuse', phones: 'Your phones', forget: 'Forget', now: 'connected now', seen: d => `seen ${d}`,
+    fine: 'The connection goes through an encrypted Cloudflare tunnel. Nobody gets in without being accepted here, and each phone can be forgotten. It turns itself off after 30 idle minutes. What you say from the phone reaches Claude marked with 📱, and Claude asks you before anything delicate.',
+    error: "I couldn't open the connection:",
+  },
+}
+let t = T.es
+const api = (path, body) => fetch(path, { method: body ? 'POST' : 'GET', headers: { 'x-claudia-chan': '1', 'content-type': 'application/json' }, body: body && JSON.stringify(body) }).then(r => r.json())
+const el = (tag, props = {}, ...kids) => { const n = Object.assign(document.createElement(tag), props); n.append(...kids); return n }
+let starting = false
+let lastQrRequest = 0
+
+async function refresh() {
+  const s = await api('/phone/state').catch(() => null)
+  if (!s) return
+  t = T[s.idioma === 'es' ? 'es' : 'en']
+  document.documentElement.lang = s.idioma === 'es' ? 'es' : 'en'
+  document.getElementById('title').textContent = t.title
+  document.getElementById('lead').textContent = t.lead
+  document.getElementById('fine').textContent = t.fine
+
+  const ask = document.getElementById('ask')
+  ask.replaceChildren(...s.pending.map(p => el('div', { className: 'card ask' },
+    el('p', { className: 'big', textContent: t.ask(p.name) }),
+    el('p', { textContent: t.askLead }),
+    el('div', { className: 'row' },
+      el('button', { className: 'primary', textContent: t.accept, onclick: () => api('/phone/decide', { id: p.id, ok: true }).then(refresh) }),
+      el('button', { className: 'plain', textContent: t.refuse, onclick: () => api('/phone/decide', { id: p.id, ok: false }).then(refresh) })))))
+
+  const card = document.getElementById('qr-card')
+  if (s.error) starting = false
+  if (!s.on) {
+    card.replaceChildren(
+      starting ? el('div', { className: 'spinner' }) : el('p', { textContent: t.off }),
+      starting ? el('p', { textContent: t.opening }) : el('button', { className: 'primary', textContent: t.start, onclick: start }),
+      ...(s.error ? [el('p', { className: 'err', textContent: `${t.error} ${s.error}` })] : []))
+  } else {
+    starting = false
+    // A fresh code whenever the last one ran out (while this window is open).
+    if (!s.qr && !s.pending.length && Date.now() - lastQrRequest > 3000) { lastQrRequest = Date.now(); api('/phone/qr', {}).then(refresh) }
+    const left = s.qr ? Math.max(0, Math.round((s.qr.expires - Date.now()) / 1000)) : 0
+    card.replaceChildren(
+      ...(s.qr ? [el('img', { src: s.qr.image, alt: 'QR' }), el('p', { className: 'big', textContent: t.scan }), el('p', { className: 'small', textContent: t.expires(left) })] : [el('div', { className: 'spinner' })]),
+      el('div', { style: 'display:flex;gap:10px' },
+        el('button', { className: 'plain', textContent: t.newQr, onclick: () => api('/phone/qr', {}).then(refresh) }),
+        el('button', { className: 'plain', textContent: t.stop, onclick: () => api('/phone/stop', {}).then(refresh) })))
+  }
+
+  const phonesCard = document.getElementById('phones-card')
+  phonesCard.hidden = !s.phones.length
+  document.getElementById('phones-title').textContent = t.phones
+  document.getElementById('phones').replaceChildren(...s.phones.map(p => el('li', {},
+    el('span', { className: `dot${p.connected ? ' on' : ''}` }),
+    el('span', { className: 'name', textContent: p.name }),
+    el('span', { className: 'small', textContent: p.connected ? t.now : t.seen(new Date(p.seen).toLocaleString()) }),
+    el('button', { className: 'plain', textContent: t.forget, onclick: () => api('/phone/forget', { id: p.id }).then(refresh) }))))
+}
+
+function start() {
+  starting = true
+  api('/phone/start', {}).then(refresh)
+  refresh()
+}
+
+refresh()
+setInterval(refresh, 1000)
+// Opening the window is asking for it: the connection starts at once.
+api('/phone/state').then(s => { if (!s.on) start() })
+</script>
+</body>
+</html>

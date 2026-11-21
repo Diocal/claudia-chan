@@ -1,22 +1,123 @@
 {
   "name": "claudia-chan-avatar",
-  "version": "0.1.0",
+  "productName": "Claudia-chan",
+  "version": "0.2.0",
+  "description": "A comedy anime girlfriend for Claude Code: a floating 3D avatar that works, talks and lives next to you.",
   "private": true,
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "node build/fetch-uv.js && electron-builder --publish never",
+    "release": "node build/fetch-uv.js && electron-builder --publish always"
   },
   "dependencies": {
     "@pixiv/three-vrm": "3.5.5",
     "@pixiv/three-vrm-animation": "3.5.5",
+    "ffmpeg-static": "5.3.0",
+    "qrcode": "1.5.4",
+    "selfsigned": "5.5.0",
     "three": "0.187.0"
   },
   "devDependencies": {
-    "electron": "45.2.3"
+    "electron": "45.2.3",
+    "electron-builder": "26.18.1"
   },
   "license": "PolyForm-Noncommercial-1.0.0",
+  "homepage": "https://github.com/Diocal/claudia-chan",
   "author": {
     "name": "Dio Calderon",
+    "email": "diocal@users.noreply.github.com",
     "url": "https://github.com/Diocal"
+  },
+  "build": {
+    "appId": "com.diocal.claudiachan",
+    "productName": "Claudia-chan",
+    "copyright": "Dio Calderon",
+    "asar": false,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "**/*",
+      "!build/**",
+      "!dist/**",
+      "!dev/**",
+      "!promo/**",
+      "!vendor/**",
+      "!plugin/tests/**",
+      "!plugin/.claude-plugin/types/**",
+      "!**/*.test.{js,mjs,tsx}",
+      "!config.json",
+      "!reminders.json",
+      "!run.sh",
+      "!setup.sh",
+      "!setup.ps1",
+      "!assets/models/avatarsample-a.vrm",
+      "!assets/animations/*.{fbx,glb}",
+      "!.claude/**",
+      "!.studio.lock",
+      "!*.log"
+    ],
+    "extraResources": [
+      {
+        "from": "build/uv",
+        "to": "uv"
+      },
+      {
+        "from": "node_modules/three/examples/jsm",
+        "to": "app/node_modules/three/examples/jsm"
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Diocal",
+        "repo": "claudia-chan",
+        "releaseType": "draft"
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "icon": "build/icon.png",
+      "artifactName": "Claudia-chan-${version}-${arch}.${ext}",
+      "synopsis": "Anime girlfriend for Claude Code"
+    },
+    "deb": {
+      "recommends": [
+        "xdotool",
+        "ffmpeg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "Claudia-chan-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.entertainment",
+      "identity": "-",
+      "artifactName": "Claudia-chan-${version}-${arch}.${ext}",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Claudia-chan listens when you press her microphone button, so you can talk to her.",
+        "LSUIElement": true
+      }
+    }
   }
 }
